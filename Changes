@@ -1,0 +1,38 @@
+0.36	2005-01-06 18:40
+			code refs can be passed to _filters, which were slightly refactored
+
+0.32	2004-12-31 15:45
+      added an old alpha binary for perl to the perls to skip
+
+0.30  2004-12-28 10:00
+      added a "new" method for construction
+      update_mirror can act as class or instance method
+      added clean_file method
+
+0.26  2004-12-02 15:05
+      require version 5.6 of perl in Makefile.PL
+
+0.24  2004-11-29 14:30
+      dirmode is correctly octalized (thanks SSORICHE)
+      sungo's *_filters patch
+
+0.20  2004-09-28 10:20
+      added config file
+      added file_allowed (to override cleanup)
+      the -d option, long documented, now works
+
+0.18  2004-09-21 20:15
+      canonpath File::Find::name to avoid horrible Win32 bug
+      added -v to print version of CPAN::Mini
+
+0.16  2004-09-07 21:50
+      added -d to set mode for created dirs
+
+0.14  2004-08-28 17:05
+      uses Pod::Usage
+      now skips ponie and parrot (not just perl)
+      -p option to override the above skipping
+      "seen_changes" attribute and return value added
+
+0.10  2004-08-26 10:50
+      initial release

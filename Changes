@@ -1,9 +1,8 @@
-0.37_02  2005-09-06 00:23
-         move arg validity check constructor (to silence ADAMK)
-         add some more checks for validity (stolen from ADAMK)
-
-0.37_01  2005-09-05 23:10
-         add errors option and -qq commandline option for it
+0.38  2005-10-13 00:05
+      more intelligently divide cleanup tasks (isn't ADAMK great?)
+      move arg validity check constructor (to silence ADAMK)
+      add some more checks for validity (stolen from ADAMK)
+      add errors option and -qq commandline option for it
 
 0.36	2005-01-06 18:40
 			code refs can be passed to _filters, which were slightly refactored

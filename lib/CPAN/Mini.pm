@@ -12,7 +12,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 version 0.37_02
 
- $Id: Mini.pm,v 1.18 2005/01/06 23:40:22 rjbs Exp $
+ $Id$
 
 =head1 SYNOPSIS
 

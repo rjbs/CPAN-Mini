@@ -344,7 +344,15 @@ sub clean_unmirrored {
 
 	find sub {
 		my $file = canonpath($File::Find::name);
-		$self->clean_file($file);
+    return unless (-f $file and not $self->{mirrored}{$file});
+    return if $self->file_allowed($file);
+    $self->trace("cleaning $file ...");
+		if ($self->clean_file($file)) {
+      $self->trace("done");
+    } else {
+      $self->trace("couldn't be cleaned");
+    }
+    $self->trace("done");
 	}, $self->{local};
 }
 
@@ -359,13 +367,11 @@ can stay, the file is deleted.
 sub clean_file {
 	my ($self, $file) = @_;
 
-	return unless (-f $file and not $self->{mirrored}{$file});
-	return if $self->file_allowed($file);
 	unless (unlink $file) {
     warn "$file ... cannot be removed: $!" if $self->{errors};
     return;
   }
-	$self->trace("$file ... removed\n");
+  return 1;
 }
 
 =head2 C<< trace( $message, $force ) >>

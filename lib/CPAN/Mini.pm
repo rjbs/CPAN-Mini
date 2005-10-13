@@ -1,5 +1,5 @@
 package CPAN::Mini;
-our $VERSION = '0.37_01';
+our $VERSION = '0.37_02';
 
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.37_01
+version 0.37_02
 
  $Id: Mini.pm,v 1.18 2005/01/06 23:40:22 rjbs Exp $
 
@@ -143,9 +143,6 @@ sub update_mirror {
 	my $self  = shift;
 	$self = $self->new(@_) unless ref $self;
 
-	croak "no local mirror supplied"  unless $self->{local};
-	croak "no remote mirror supplied" unless $self->{remote};
-
 	# mirrored tracks the already done, keyed by filename
 	# 1 = local-checked, 2 = remote-mirrored
 	$self->mirror_indices;
@@ -193,7 +190,16 @@ sub new {
     mirrored     => {}
   );
 
-	bless { %defaults, @_ } => $class;
+	my $self = bless { %defaults, @_ } => $class;
+
+	croak "no local mirror supplied"  unless $self->{local};
+  croak "no write permission to local mirror" unless -w $self->{local};
+
+	croak "no remote mirror supplied" unless $self->{remote};
+  croak "unable to contact the remote mirror"
+    unless LWP::Simple::head($self->{remote});
+
+	return $self;
 }
 
 =head2 C<< mirror_indices >>

@@ -1,3 +1,7 @@
+0.37_02  2005-09-06 00:23
+         move arg validity check constructor (to silence ADAMK)
+         add some more checks for validity (stolen from ADAMK)
+
 0.37_01  2005-09-05 23:10
          add errors option and -qq commandline option for it
 

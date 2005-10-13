@@ -33,6 +33,17 @@ use CPAN::Mini;
 use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
+use File::HomeDir;
+BEGIN {
+  if ($^O eq "MSWin32") {
+    eval {
+      require File::HomeDir::Win32;
+      File::HomeDir::Win32->import();
+    };
+    die $@ if ($@); 
+  }
+}
+
 sub config_read {
   my $filename = shift;
 
@@ -62,7 +73,7 @@ sub display_version {
   exit;
 }
 
-my %config = config_read( $ENV{HOME} . '/.minicpanrc' );
+my %config = config_read( home() . '/.minicpanrc' );
 my $class  = 'CPAN::Mini';
 my $version;
 
@@ -93,13 +104,13 @@ CPAN::Mini->update_mirror(
   remote  => $config{remote},
   local   => $config{local},
   trace   => (not $config{quiet}),
-  errors  => $config{errors},
   force   => $config{force},
   dirmode => $config{dirmode},
   skip_perl      => (not $config{perl}),
   exact_mirror   => ($config{exact_mirror}),
   module_filters => ($config{module_filters}),
   path_filters   => ($config{path_filters}),
+  (defined $config{errors} ? (errors  => $config{errors}) : ()),
 );
 
 =head1 CONFIGURATION FILE

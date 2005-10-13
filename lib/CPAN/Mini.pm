@@ -334,8 +334,9 @@ sub file_allowed {
 
 =head2 C<< clean_unmirrored >>
 
-This method finds any files in the local mirror which are no longer needed and
-calls the C<clean_file> method on them.
+This method looks through the local mirror's files.  If it finds a file that
+neither belongs in the mirror nor is allowed (see the C<file_allowed> method),
+C<clean_file> is called on the file.
 
 =cut
 
@@ -357,9 +358,8 @@ sub clean_unmirrored {
 
 =head2 C<< clean_file($filename) >>
 
-This method, called by C<clean_unmirrored>, checks whether the named file
-exists.  If it exists, and was not mirrored, and C<file_allowed> doesn't say it
-can stay, the file is deleted.
+This method, called by C<clean_unmirrored>, deletes the named file.  It returns
+true if the file is successfully unlinked.  Otherwise, it returns false.
 
 =cut
 

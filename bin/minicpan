@@ -17,6 +17,7 @@ minicpan - uses CPAN::Mini to create or update a local mirror
    -f         - check all directories, even if indices are unchanged
    -p         - mirror perl, ponie, and parrot distributions
    -q         - run in quiet mode (don't print status)
+   -qq        - run in silent mode (don't even print warnings)
 
 =head1 DESCRIPTION
 
@@ -33,32 +34,32 @@ use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
 sub config_read {
-	my $filename = shift;
+  my $filename = shift;
 
-	return unless -e $filename;
+  return unless -e $filename;
 
-	open my $config_file, '<', $filename
-		or die "couldn't open config file $filename: $!";
-	
-	my %config;
-	while (<$config_file>) { 
-		chomp;
-		next if /\A\s*\Z/sm;
-		if (/\A(\w+):\s*(.+)\Z/sm) { $config{$1} = $2; }
-	}
-	for (qw(module_filters path_filters)) {
-		$config{$_} = [ map { qr/$_/ } split /\s+/, $config{$_} ] if $config{$_};
-	}
-	return %config;
+  open my $config_file, '<', $filename
+    or die "couldn't open config file $filename: $!";
+  
+  my %config;
+  while (<$config_file>) { 
+    chomp;
+    next if /\A\s*\Z/sm;
+    if (/\A(\w+):\s*(.+)\Z/sm) { $config{$1} = $2; }
+  }
+  for (qw(module_filters path_filters)) {
+    $config{$_} = [ map { qr/$_/ } split /\s+/, $config{$_} ] if $config{$_};
+  }
+  return %config;
 }
 
 sub display_version {
-	my $class = shift;
-	no strict 'refs';
-	print "minicpan",
-		($class ne 'CPAN::Mini' ? ' (from CPAN::Mini)' : ''),
-		", powered by $class ", ${"$class\:\:VERSION"}, "\n\n";
-	exit;
+  my $class = shift;
+  no strict 'refs';
+  print "minicpan",
+    ($class ne 'CPAN::Mini' ? ' (from CPAN::Mini)' : ''),
+    ", powered by $class ", ${"$class\:\:VERSION"}, "\n\n";
+  exit;
 }
 
 my %config = config_read( $ENV{HOME} . '/.minicpanrc' );
@@ -66,16 +67,17 @@ my $class  = 'CPAN::Mini';
 my $version;
 
 GetOptions(
-  "c|class=s"  => \$class,
-	"h|help"     => sub { pod2usage(1); },
-	"v|version"  => sub { $version = 1 },
-	"l|local=s"   => \$config{local},
-	"r|remote=s"  => \$config{remote},
-	"d|dirmode=s" => \$config{dirmode},
-	"q+" => \$config{quiet},
-	"f+" => \$config{force},
-	"p+" => \$config{perl},
-	"x+" => \$config{exact_mirror},
+  "c|class=s"   => \$class,
+  "h|help"      => sub { pod2usage(1); },
+  "v|version"   => sub { $version = 1 },
+  "l|local=s"   => \$config{local},
+  "r|remote=s"  => \$config{remote},
+  "d|dirmode=s" => \$config{dirmode},
+  "qq"          => sub { $config{quiet} = 2; $config{errors} = 0; },
+  "q+" => \$config{quiet},
+  "f+" => \$config{force},
+  "p+" => \$config{perl},
+  "x+" => \$config{exact_mirror},
 ) or pod2usage(2);
 
 eval "require $class";
@@ -88,15 +90,15 @@ $|++;
 $config{dirmode} &&= oct($config{dirmode});
 
 CPAN::Mini->update_mirror(
-	remote  => $config{remote},
-	local   => $config{local},
-	trace   => (not $config{quiet}),
-	force   => $config{force},
-	dirmode => $config{dirmode},
-	skip_perl      => (not $config{perl}),
-	exact_mirror   => ($config{exact_mirror}),
-	module_filters => ($config{module_filters}),
-	path_filters   => ($config{path_filters}),
+  remote  => $config{remote},
+  local   => $config{local},
+  trace   => (not $config{quiet}),
+  force   => $config{force},
+  dirmode => $config{dirmode},
+  skip_perl      => (not $config{perl}),
+  exact_mirror   => ($config{exact_mirror}),
+  module_filters => ($config{module_filters}),
+  path_filters   => ($config{path_filters}),
 );
 
 =head1 CONFIGURATION FILE
@@ -117,7 +119,7 @@ Improve command-line options.
 
 Randal Schwartz's original article, which can be found here:
 
-	http://www.stonehenge.com/merlyn/LinuxMag/col42.html
+  http://www.stonehenge.com/merlyn/LinuxMag/col42.html
 
 =head1 AUTHORS
 

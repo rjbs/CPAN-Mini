@@ -103,6 +103,10 @@ and ponie.
 
 If true, CPAN::Mini will print status messages to STDOUT as it works.
 
+=item * C<errors>
+
+If true, CPAN::Mini will warn with status messages on errors.
+
 =item * C<path_filters>
 
 This options provides a set of rules for filtering paths.  If a distribution
@@ -182,7 +186,12 @@ above, under C<update_mirror>.
 
 sub new {
 	my $class = shift;
-	my %defaults = (changes_made => 0, dirmode => 0711, mirrored => {});
+	my %defaults = (
+    changes_made => 0,
+    dirmode      => 0711,
+    errors       => 1,
+    mirrored     => {}
+  );
 
 	bless { %defaults, @_ } => $class;
 }
@@ -215,8 +224,12 @@ sub mirror_file {
 	my $path   = shift;           # partial URL
 	my $skip_if_present = shift;  # true/false
 
-	my $remote_uri = URI->new_abs($path, $self->{remote})->as_string; # full URL
-	my $local_file = catfile($self->{local}, split "/", $path); # native absolute file
+  # full URL
+	my $remote_uri = URI->new_abs($path, $self->{remote})->as_string;
+
+  # native absolute file
+	my $local_file = catfile($self->{local}, split "/", $path);
+
 	my $checksum_might_be_up_to_date = 1;
 
 	if ($skip_if_present and -f $local_file) {
@@ -235,7 +248,7 @@ sub mirror_file {
 			$self->trace(" ... updated\n");
 			$self->{changes_made}++;
 		} elsif ($status != RC_NOT_MODIFIED) {
-			warn "\n$remote_uri: $status\n";
+			warn "\n$remote_uri: $status\n" if $self->{errors};
 			return;
 		} else {
 			$self->trace(" ... up to date\n");
@@ -341,7 +354,10 @@ sub clean_file {
 
 	return unless (-f $file and not $self->{mirrored}{$file});
 	return if $self->file_allowed($file);
-	unless (unlink $file) { warn "$file ... cannot be removed: $!"; return; }
+	unless (unlink $file) {
+    warn "$file ... cannot be removed: $!" if $self->{errors};
+    return;
+  }
 	$self->trace("$file ... removed\n");
 }
 

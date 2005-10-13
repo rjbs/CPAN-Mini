@@ -1,5 +1,5 @@
 package CPAN::Mini;
-our $VERSION = '0.36';
+our $VERSION = '0.38';
 
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.36
+version 0.38
 
  $Id: Mini.pm,v 1.18 2005/01/06 23:40:22 rjbs Exp $
 

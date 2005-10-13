@@ -348,11 +348,10 @@ sub clean_unmirrored {
     return if $self->file_allowed($file);
     $self->trace("cleaning $file ...");
 		if ($self->clean_file($file)) {
-      $self->trace("done");
+      $self->trace("done\n");
     } else {
-      $self->trace("couldn't be cleaned");
+      $self->trace("couldn't be cleaned\n");
     }
-    $self->trace("done");
 	}, $self->{local};
 }
 

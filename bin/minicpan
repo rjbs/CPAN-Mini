@@ -93,6 +93,7 @@ CPAN::Mini->update_mirror(
   remote  => $config{remote},
   local   => $config{local},
   trace   => (not $config{quiet}),
+  errors  => $config{errors},
   force   => $config{force},
   dirmode => $config{dirmode},
   skip_perl      => (not $config{perl}),

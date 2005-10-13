@@ -1,5 +1,5 @@
 package CPAN::Mini;
-our $VERSION = '0.38';
+our $VERSION = '0.37_01';
 
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.38
+version 0.37_01
 
  $Id: Mini.pm,v 1.18 2005/01/06 23:40:22 rjbs Exp $
 
@@ -105,7 +105,7 @@ If true, CPAN::Mini will print status messages to STDOUT as it works.
 
 =item * C<errors>
 
-If true, CPAN::Mini will warn with status messages on errors.
+If true, CPAN::Mini will warn with status messages on errors.  (default: true)
 
 =item * C<path_filters>
 
@@ -248,7 +248,8 @@ sub mirror_file {
 			$self->trace(" ... updated\n");
 			$self->{changes_made}++;
 		} elsif ($status != RC_NOT_MODIFIED) {
-			warn "\n$remote_uri: $status\n" if $self->{errors};
+			warn( ($self->{trace} ? "\n" : '')
+        . "$remote_uri: $status\n") if $self->{errors};
 			return;
 		} else {
 			$self->trace(" ... up to date\n");

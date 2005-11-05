@@ -146,7 +146,7 @@ sub update_mirror {
 	# mirrored tracks the already done, keyed by filename
 	# 1 = local-checked, 2 = remote-mirrored
 	$self->mirror_indices;
-	
+
 	return unless $self->{force} or $self->{changes_made};
 
 	# now walk the packages list
@@ -193,6 +193,12 @@ sub new {
 	my $self = bless { %defaults, @_ } => $class;
 
 	croak "no local mirror supplied"  unless $self->{local};
+  croak "local mirror path exists but is not a directory"
+    if (-e $self->{local}) and not (-d $self->{local});
+
+  mkpath($self->{local}, $self->{trace}, $self->{dirmode})
+    unless -e $self->{local};
+
   croak "no write permission to local mirror" unless -w $self->{local};
 
 	croak "no remote mirror supplied" unless $self->{remote};
@@ -305,7 +311,7 @@ sub __do_filter {
 sub _filter_module {
 	my $self = shift;
 	my $args = shift;
- 
+
 	if ($self->{skip_perl}) {
 		return 1 if $args->{path} =~ m{/(?:emb|syb|bio)*perl-\d}i;
 		return 1 if $args->{path} =~ m{/(?:parrot|ponie)-\d}i;
@@ -373,17 +379,16 @@ sub clean_file {
   return 1;
 }
 
-=head2 C<< trace( $message, $force ) >>
+=head2 C<< trace( $message ) >>
 
 If the object is mirroring verbosely, this method will print messages sent to
-it.  If CPAN::Mini is not operating in verbose mode, but C<$force> is true, it
-will print the message anyway.
+it.
 
 =cut
 
 sub trace {
-	my ($self, $message, $force) = @_;
-	print "$message" if $self->{trace} or $force;
+	my ($self, $message) = @_;
+	print "$message" if $self->{trace};
 }
 
 =head1 SEE ALSO
@@ -405,6 +410,9 @@ Thanks to Shawn Sorichetti for fixing a stupid octal-number-as-string bug.
 
 Thanks to sungo for implementing the filters, so I can finally stop mirroring
 bioperl, and Robert Rothenberg for suggesting adding coderef rules.
+
+Thanks to Adam Kennedy for noticing and complaining about a lot of stupid
+little design decisions.
 
 =head1 AUTHORS
 

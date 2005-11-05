@@ -1,3 +1,9 @@
+0.40  2005-11-04
+      remove force option to trace
+      create local mirror if needed
+      notice if local mirror -e && ! -d
+      cleared out stupid /\A\s+\z/ lines
+
 0.38  2005-10-13 00:05
       more intelligently divide cleanup tasks (isn't ADAMK great?)
       move arg validity check constructor (to silence ADAMK)

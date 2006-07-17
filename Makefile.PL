@@ -9,8 +9,7 @@ WriteMakefile(
 		'URI' => 1,
 		'LWP' => 5,
 		'Compress::Zlib' => '1.20',
-    'File::HomeDir'  => 0,
-    ($^O eq 'MSWin32' ? ('File::HomeDir::Win32' => 0) : ()),
+    'File::HomeDir'  => '0.57', # Win32 Support
 		'Pod::Usage'     => 1,
 	},
 	'PREREQ_PRINT' => 1

@@ -30,22 +30,18 @@ updated before running this script for the first time.
 =cut
 
 use CPAN::Mini;
+use File::HomeDir;
+use File::Spec;
 use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
-use File::HomeDir;
-BEGIN {
-  if ($^O eq "MSWin32") {
-    eval {
-      require File::HomeDir::Win32;
-      File::HomeDir::Win32->import();
-    };
-    die $@ if ($@); 
-  }
-}
-
 sub config_read {
-  my $filename = shift;
+  my $homedir = File::HomeDir->my_home || $ENV{HOME};
+
+  die "couldn't determine your home directory!  set HOME environment variable"
+    unless defined $homedir;
+
+  my $filename = File::Spec->catfile($homedir, '.minicpanrc');
 
   return unless -e $filename;
 
@@ -57,6 +53,9 @@ sub config_read {
     chomp;
     next if /\A\s*\Z/sm;
     if (/\A(\w+):\s*(.+)\Z/sm) { $config{$1} = $2; }
+  }
+  for (qw(also_mirror)) {
+    $config{$_} = [ grep { length } split /\s+/, $config{$_}] if $config{$_};
   }
   for (qw(module_filters path_filters)) {
     $config{$_} = [ map { qr/$_/ } split /\s+/, $config{$_} ] if $config{$_};
@@ -73,7 +72,7 @@ sub display_version {
   exit;
 }
 
-my %config = config_read( home() . '/.minicpanrc' );
+my %config = config_read;
 my $class  = 'CPAN::Mini';
 my $version;
 
@@ -106,10 +105,11 @@ CPAN::Mini->update_mirror(
   trace   => (not $config{quiet}),
   force   => $config{force},
   dirmode => $config{dirmode},
-  skip_perl      => (not $config{perl}),
+  also_mirror    => $config{also_mirror},
   exact_mirror   => ($config{exact_mirror}),
   module_filters => ($config{module_filters}),
   path_filters   => ($config{path_filters}),
+  skip_perl      => (not $config{perl}),
   (defined $config{errors} ? (errors  => $config{errors}) : ()),
 );
 

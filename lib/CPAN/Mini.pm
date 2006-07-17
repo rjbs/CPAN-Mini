@@ -1,5 +1,5 @@
 package CPAN::Mini;
-our $VERSION = '0.40';
+our $VERSION = '0.500';
 
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.40
+version 0.500
 
  $Id$
 
@@ -217,11 +217,13 @@ This method updates the index files from the CPAN.
 sub mirror_indices {
 	my $self = shift;
 
-	$self->mirror_file($_) for qw(
-	                              authors/01mailrc.txt.gz
-	                              modules/02packages.details.txt.gz
-	                              modules/03modlist.data.gz
-	                             );
+  my @fixed_mirrors = qw(
+	    authors/01mailrc.txt.gz
+	    modules/02packages.details.txt.gz
+	    modules/03modlist.data.gz
+    );
+
+	$self->mirror_file($_) for @fixed_mirrors, @{$self->{also_mirror}};
 }
 
 =head2 C<< mirror_file($path, $skip_if_present) >>

@@ -1,5 +1,5 @@
 package CPAN::Mini;
-our $VERSION = '0.500';
+our $VERSION = '0.550';
 
 use strict;
 use warnings;
@@ -10,7 +10,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.500
+version 0.550
 
  $Id$
 
@@ -122,13 +122,18 @@ setting would skip all distributions from RJBS and SUNGO:
 
 =item * C<module_filters>
 
-This options provides a set of rules for filtering modules.  It behaves like
+This option provides a set of rules for filtering modules.  It behaves like
 path_filters, but acts only on module names.  (Since most modules are in
 distributions with more than one module, this setting will probably be less
 useful than C<path_filters>.)  For example, this setting will skip any
 distribution containing only modules with the word "Acme" in them:
 
  module_filters => [ qr/Acme/i ]
+
+=item * C<also_mirror>
+
+This option should be an arrayref of extra files in the remote CPAN to mirror
+locally.
 
 =item * C<skip_cleanup>
 
@@ -237,7 +242,8 @@ sub mirror_indices {
 	    modules/03modlist.data.gz
     );
 
-	$self->mirror_file($_, undef, 1) for @fixed_mirrors, @{$self->{also_mirror}};
+  # XXX: Should the 0 be a 1, below? -- rjbs, 2006-08-08
+	$self->mirror_file($_, undef, 0) for @fixed_mirrors, @{$self->{also_mirror}};
 }
 
 =head2 mirror_file
@@ -501,9 +507,11 @@ little design decisions.
 
 =head1 AUTHORS
 
-Randal Schwartz <F<merlyn@stonehenge.com>> did all the work. 
+Randal Schwartz <F<merlyn@stonehenge.com>> wrote the original F<minicpan>
+script.
 
-Ricardo SIGNES <F<rjbs@cpan.org>> made a module and distribution.
+Ricardo SIGNES <F<rjbs@cpan.org>> turned Randal's script into a module and CPAN
+distribution, and has maintained it since its release as such.
 
 This code was copyrighted in 2004, and is released under the same terms as Perl
 itself.

@@ -1,3 +1,11 @@
+0.550  2006-08-08
+       add tilde expansion for homedir in local mirror specification
+       move configuration reading into CPAN::Mini
+       document a few previously-undocumented things
+       documentation cleanup
+       added unused-by-script option to use current mtime for indices
+        (this helps CPANPLUS do the right thing)
+
 0.500  2006-07-11
        we no longer need File::HomeDir::Win32 on Windows
        provide the also_mirror option to get other static files

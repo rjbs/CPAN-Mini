@@ -47,17 +47,17 @@ the newest version of every distribution.  Those files are:
 
 =cut
 
-use Carp;
+use Carp ();
 
-use File::Path qw(mkpath);
-use File::Basename qw(basename dirname);
-use File::Spec::Functions qw(catfile canonpath);
-use File::Find qw(find);
+use File::Path ();
+use File::Basename ();
+use File::Spec ();
+use File::Find ();
 
 use URI ();
-use LWP::Simple qw(mirror RC_OK RC_NOT_MODIFIED);
+use LWP::Simple ();
 
-use Compress::Zlib qw(gzopen $gzerrno);
+use Compress::Zlib ();
 
 =head1 METHODS
 
@@ -150,8 +150,14 @@ sub update_mirror {
 	return unless $self->{force} or $self->{changes_made};
 
 	# now walk the packages list
-	my $details = catfile($self->{local}, qw(modules 02packages.details.txt.gz));
-	my $gz = gzopen($details, "rb") or die "Cannot open details: $gzerrno";
+	my $details = File::Spec->catfile(
+    $self->{local},
+    qw(modules 02packages.details.txt.gz)
+  );
+
+	my $gz = Compress::Zlib::gzopen($details, "rb")
+    or die "Cannot open details: $Compress::Zlib::gzerrno";
+
 	my $inheader = 1;
 	while ($gz->gzreadline($_) > 0) {
 		if ($inheader) {
@@ -194,17 +200,17 @@ sub new {
 
 	my $self = bless { %defaults, @_ } => $class;
 
-	croak "no local mirror supplied"  unless $self->{local};
-  croak "local mirror path exists but is not a directory"
+	Carp::croak "no local mirror supplied"  unless $self->{local};
+  Carp::croak "local mirror path exists but is not a directory"
     if (-e $self->{local}) and not (-d $self->{local});
 
-  mkpath($self->{local}, $self->{trace}, $self->{dirmode})
+  File::Path::mkpath($self->{local}, $self->{trace}, $self->{dirmode})
     unless -e $self->{local};
 
-  croak "no write permission to local mirror" unless -w $self->{local};
+  Carp::croak "no write permission to local mirror" unless -w $self->{local};
 
-	croak "no remote mirror supplied" unless $self->{remote};
-  croak "unable to contact the remote mirror"
+	Carp::croak "no remote mirror supplied" unless $self->{remote};
+  Carp::croak "unable to contact the remote mirror"
     unless LWP::Simple::head($self->{remote});
 
 	return $self;
@@ -249,7 +255,7 @@ sub mirror_file {
 	my $remote_uri = URI->new_abs($path, $self->{remote})->as_string;
 
   # native absolute file
-	my $local_file = catfile($self->{local}, split "/", $path);
+	my $local_file = File::Spec->catfile($self->{local}, split "/", $path);
 
 	my $checksum_might_be_up_to_date = 1;
 
@@ -260,16 +266,21 @@ sub mirror_file {
 		## upgrade to full mirror
 		$self->{mirrored}{$local_file} = 2;
 
-		mkpath(dirname($local_file), $self->{trace}, $self->{dirmode});
-		$self->trace($path);
-		my $status = mirror($remote_uri, $local_file);
+		File::Path::mkpath(
+      File::Basename::dirname($local_file),
+      $self->{trace},
+      $self->{dirmode}
+    );
 
-		if ($status == RC_OK) {
+		$self->trace($path);
+		my $status = LWP::Simple::mirror($remote_uri, $local_file);
+
+		if ($status == LWP::Simple::RC_OK) {
       utime undef, undef, $local_file if $update_times;
 			$checksum_might_be_up_to_date = 0;
 			$self->trace(" ... updated\n");
 			$self->{changes_made}++;
-		} elsif ($status != RC_NOT_MODIFIED) {
+		} elsif ($status != LWP::Simple::RC_NOT_MODIFIED) {
 			warn( ($self->{trace} ? "\n" : '')
         . "$remote_uri: $status\n") if $self->{errors};
 			return;
@@ -350,7 +361,7 @@ By default, only dot-files are allowed.
 sub file_allowed {
 	my ($self, $file) = @_;
 	return if $self->{exact_mirror};
-	return (substr(basename($file),0,1) eq '.') ? 1 : 0;
+	return (substr(File::Spec::basename($file),0,1) eq '.') ? 1 : 0;
 }
 
 =head2 clean_unmirrored
@@ -366,8 +377,8 @@ C<clean_file> is called on the file.
 sub clean_unmirrored {
 	my $self = shift;
 
-	find sub {
-		my $file = canonpath($File::Find::name);
+	File::Find::find sub {
+		my $file = File::Spec->canonpath($File::Find::name);
     return unless (-f $file and not $self->{mirrored}{$file});
     return if $self->file_allowed($file);
     $self->trace("cleaning $file ...");
@@ -410,6 +421,47 @@ it.
 sub trace {
 	my ($self, $message) = @_;
 	print "$message" if $self->{trace};
+}
+
+=head2 read_config
+
+  my %config = CPAN::Mini->read_config;
+
+This routine returns a set of arguments that can be passed to CPAN::Mini's
+C<new> or C<update_mirror> methods.  It will look for a file called
+F<.minicpanrc> in the user's home directory as determined by
+L<File::HomeDir|File::HomeDir>.
+
+=cut
+
+sub read_config {
+  my ($class) = @_;
+
+  my $homedir = File::HomeDir->my_home || $ENV{HOME};
+
+  Carp::croak "couldn't determine your home directory!  set HOME env variable"
+    unless defined $homedir;
+
+  my $filename = File::Spec->catfile($homedir, '.minicpanrc');
+
+  return unless -e $filename;
+
+  open my $config_file, '<', $filename
+    or die "couldn't open config file $filename: $!";
+  
+  my %config;
+  while (<$config_file>) { 
+    chomp;
+    next if /\A\s*\Z/sm;
+    if (/\A(\w+):\s*(.+)\Z/sm) { $config{$1} = $2; }
+  }
+  for (qw(also_mirror)) {
+    $config{$_} = [ grep { length } split /\s+/, $config{$_}] if $config{$_};
+  }
+  for (qw(module_filters path_filters)) {
+    $config{$_} = [ map { qr/$_/ } split /\s+/, $config{$_} ] if $config{$_};
+  }
+  return %config;
 }
 
 =head2 

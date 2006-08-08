@@ -35,34 +35,6 @@ use File::Spec;
 use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
-sub config_read {
-  my $homedir = File::HomeDir->my_home || $ENV{HOME};
-
-  die "couldn't determine your home directory!  set HOME environment variable"
-    unless defined $homedir;
-
-  my $filename = File::Spec->catfile($homedir, '.minicpanrc');
-
-  return unless -e $filename;
-
-  open my $config_file, '<', $filename
-    or die "couldn't open config file $filename: $!";
-  
-  my %config;
-  while (<$config_file>) { 
-    chomp;
-    next if /\A\s*\Z/sm;
-    if (/\A(\w+):\s*(.+)\Z/sm) { $config{$1} = $2; }
-  }
-  for (qw(also_mirror)) {
-    $config{$_} = [ grep { length } split /\s+/, $config{$_}] if $config{$_};
-  }
-  for (qw(module_filters path_filters)) {
-    $config{$_} = [ map { qr/$_/ } split /\s+/, $config{$_} ] if $config{$_};
-  }
-  return %config;
-}
-
 sub display_version {
   my $class = shift;
   no strict 'refs';
@@ -72,7 +44,7 @@ sub display_version {
   exit;
 }
 
-my %config = config_read;
+my %config = CPAN::Mini->read_config;
 my $class  = 'CPAN::Mini';
 my $version;
 

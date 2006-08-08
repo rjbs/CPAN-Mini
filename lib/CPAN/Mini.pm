@@ -61,7 +61,7 @@ use Compress::Zlib qw(gzopen $gzerrno);
 
 =head1 METHODS
 
-=head2 C<< update_mirror( %args ) >>
+=head2 update_mirror
 
  CPAN::Mini->update_mirror(
    remote => "http://cpan.mirrors.comintern.su",
@@ -174,7 +174,9 @@ sub update_mirror {
 	return $self->{changes_made};
 }
 
-=head2 C<< new >>
+=head2 new
+
+  my $minicpan = CPAN::Mini->new;
 
 This method constructs a new CPAN::Mini object.  Its parameters are described
 above, under C<update_mirror>.
@@ -208,7 +210,9 @@ sub new {
 	return $self;
 }
 
-=head2 C<< mirror_indices >>
+=head2 mirror_indices
+
+  $minicpan->mirror_indices;
 
 This method updates the index files from the CPAN.
 
@@ -223,10 +227,12 @@ sub mirror_indices {
 	    modules/03modlist.data.gz
     );
 
-	$self->mirror_file($_) for @fixed_mirrors, @{$self->{also_mirror}};
+	$self->mirror_file($_, undef, 1) for @fixed_mirrors, @{$self->{also_mirror}};
 }
 
-=head2 C<< mirror_file($path, $skip_if_present) >>
+=head2 mirror_file
+
+  $minicpan->mirror_file($path, $skip_if_present)
 
 This method will mirror the given file from the remote to the local mirror,
 overwriting any existing file unless C<$skip_if_present> is true.
@@ -237,6 +243,7 @@ sub mirror_file {
 	my $self   = shift;
 	my $path   = shift;           # partial URL
 	my $skip_if_present = shift;  # true/false
+  my $update_times    = shift;  # true/false
 
   # full URL
 	my $remote_uri = URI->new_abs($path, $self->{remote})->as_string;
@@ -258,6 +265,7 @@ sub mirror_file {
 		my $status = mirror($remote_uri, $local_file);
 
 		if ($status == RC_OK) {
+      utime undef, undef, $local_file if $update_times;
 			$checksum_might_be_up_to_date = 0;
 			$self->trace(" ... updated\n");
 			$self->{changes_made}++;
@@ -281,7 +289,10 @@ sub mirror_file {
 
 =begin devel
 
-=head2 C<< _filter_module({ module => $foo, version => $foo, path => $foo }) >>
+=head2 _filter_module
+
+ next if
+   $self->_filter_module({ module => $foo, version => $foo, path => $foo });
 
 This internal-only method encapsulates the logic where we figure out if a
 module is to be mirrored or not. Better stated, this method holds the filter
@@ -325,7 +336,9 @@ sub _filter_module {
 	return 0;
 }
 
-=head2 C<< file_allowed($file) >>
+=head2 file_allowed
+
+  next unless $minicpan->file_allowed($filename);
 
 This method returns true if the given file is allowed to exist in the local
 mirror, even if it isn't one of the required mirror files.
@@ -340,7 +353,9 @@ sub file_allowed {
 	return (substr(basename($file),0,1) eq '.') ? 1 : 0;
 }
 
-=head2 C<< clean_unmirrored >>
+=head2 clean_unmirrored
+
+  $minicpan->clean_unmirrored;
 
 This method looks through the local mirror's files.  If it finds a file that
 neither belongs in the mirror nor is allowed (see the C<file_allowed> method),
@@ -364,7 +379,9 @@ sub clean_unmirrored {
 	}, $self->{local};
 }
 
-=head2 C<< clean_file($filename) >>
+=head2 clean_file
+
+  $minicpan->clean_file($filename);
 
 This method, called by C<clean_unmirrored>, deletes the named file.  It returns
 true if the file is successfully unlinked.  Otherwise, it returns false.
@@ -381,7 +398,9 @@ sub clean_file {
   return 1;
 }
 
-=head2 C<< trace( $message ) >>
+=head2 trace
+
+  $minicpan->trace($message);
 
 If the object is mirroring verbosely, this method will print messages sent to
 it.
@@ -392,6 +411,8 @@ sub trace {
 	my ($self, $message) = @_;
 	print "$message" if $self->{trace};
 }
+
+=head2 
 
 =head1 SEE ALSO
 

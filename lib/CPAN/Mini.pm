@@ -201,6 +201,10 @@ sub new {
 	my $self = bless { %defaults, @_ } => $class;
 
 	Carp::croak "no local mirror supplied"  unless $self->{local};
+
+  substr($self->{local}, 0, 1, $class->__homedir)
+    if substr($self->{local}, 0, 1) eq '~';
+
   Carp::croak "local mirror path exists but is not a directory"
     if (-e $self->{local}) and not (-d $self->{local});
 
@@ -434,15 +438,21 @@ L<File::HomeDir|File::HomeDir>.
 
 =cut
 
-sub read_config {
+sub __homedir {
   my ($class) = @_;
 
   my $homedir = File::HomeDir->my_home || $ENV{HOME};
 
   Carp::croak "couldn't determine your home directory!  set HOME env variable"
     unless defined $homedir;
+  
+  return $homedir;
+}
 
-  my $filename = File::Spec->catfile($homedir, '.minicpanrc');
+sub read_config {
+  my ($class) = @_;
+
+  my $filename = File::Spec->catfile($class->__homedir, '.minicpanrc');
 
   return unless -e $filename;
 

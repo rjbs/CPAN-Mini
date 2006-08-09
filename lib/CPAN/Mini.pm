@@ -371,7 +371,7 @@ By default, only dot-files are allowed.
 sub file_allowed {
 	my ($self, $file) = @_;
 	return if $self->{exact_mirror};
-	return (substr(File::Spec::basename($file),0,1) eq '.') ? 1 : 0;
+	return (substr(File::Basename::basename($file),0,1) eq '.') ? 1 : 0;
 }
 
 =head2 clean_unmirrored

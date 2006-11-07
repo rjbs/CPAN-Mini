@@ -8,3 +8,4 @@ t/00_load.t
 t/filter.t
 t/pod-coverage.t
 t/pod.t
+t/perl-critic.t

@@ -1,8 +1,10 @@
-package CPAN::Mini;
-our $VERSION = '0.550';
-
 use strict;
 use warnings;
+
+package CPAN::Mini;
+our $VERSION = '0.551';
+
+## no critic RequireCarping
 
 =head1 NAME
 
@@ -10,7 +12,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.550
+version 0.551
 
  $Id$
 
@@ -198,7 +200,7 @@ sub new {
 	my $class = shift;
 	my %defaults = (
     changes_made => 0,
-    dirmode      => 0711,
+    dirmode      => 0711, ## no critic Zero
     errors       => 1,
     mirrored     => {}
   );
@@ -208,7 +210,7 @@ sub new {
 	Carp::croak "no local mirror supplied"  unless $self->{local};
 
   substr($self->{local}, 0, 1, $class->__homedir)
-    if substr($self->{local}, 0, 1) eq '~';
+    if substr($self->{local}, 0, 1) eq q{~};
 
   Carp::croak "local mirror path exists but is not a directory"
     if (-e $self->{local}) and not (-d $self->{local});
@@ -237,9 +239,9 @@ sub mirror_indices {
 	my $self = shift;
 
   my @fixed_mirrors = qw(
-	    authors/01mailrc.txt.gz
-	    modules/02packages.details.txt.gz
-	    modules/03modlist.data.gz
+      authors/01mailrc.txt.gz
+      modules/02packages.details.txt.gz
+      modules/03modlist.data.gz
     );
 
   # XXX: Should the 0 be a 1, below? -- rjbs, 2006-08-08
@@ -265,7 +267,7 @@ sub mirror_file {
 	my $remote_uri = URI->new_abs($path, $self->{remote})->as_string;
 
   # native absolute file
-	my $local_file = File::Spec->catfile($self->{local}, split "/", $path);
+	my $local_file = File::Spec->catfile($self->{local}, split m{/}, $path);
 
 	my $checksum_might_be_up_to_date = 1;
 
@@ -291,7 +293,7 @@ sub mirror_file {
 			$self->trace(" ... updated\n");
 			$self->{changes_made}++;
 		} elsif ($status != LWP::Simple::RC_NOT_MODIFIED) {
-			warn( ($self->{trace} ? "\n" : '')
+			warn( ($self->{trace} ? "\n" : q{})
         . "$remote_uri: $status\n") if $self->{errors};
 			return;
 		} else {
@@ -371,7 +373,7 @@ By default, only dot-files are allowed.
 sub file_allowed {
 	my ($self, $file) = @_;
 	return if $self->{exact_mirror};
-	return (substr(File::Basename::basename($file),0,1) eq '.') ? 1 : 0;
+	return (substr(File::Basename::basename($file),0,1) eq q{.}) ? 1 : 0;
 }
 
 =head2 clean_unmirrored
@@ -388,7 +390,7 @@ sub clean_unmirrored {
 	my $self = shift;
 
 	File::Find::find sub {
-		my $file = File::Spec->canonpath($File::Find::name);
+		my $file = File::Spec->canonpath($File::Find::name); ## no critic Package
     return unless (-f $file and not $self->{mirrored}{$file});
     return if $self->file_allowed($file);
     $self->trace("cleaning $file ...");
@@ -413,7 +415,7 @@ sub clean_file {
 	my ($self, $file) = @_;
 
 	unless (unlink $file) {
-    warn "$file ... cannot be removed: $!" if $self->{errors};
+    warn "$file ... cannot be removed: $!\n" if $self->{errors};
     return;
   }
   return 1;

@@ -1,3 +1,6 @@
+0.551  2006-11-13
+       packaging improvements
+
 0.550  2006-08-08
        add tilde expansion for homedir in local mirror specification
        move configuration reading into CPAN::Mini

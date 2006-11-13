@@ -1,9 +1,0 @@
-.cvsignore
-.lwpcookies
-.releaserc
-Makefile
-META.yml
-cover_db
-CPAN-Mini-*
-blib
-pm_to_blib

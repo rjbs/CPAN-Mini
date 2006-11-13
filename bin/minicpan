@@ -39,8 +39,8 @@ sub display_version {
   my $class = shift;
   no strict 'refs';
   print "minicpan",
-    ($class ne 'CPAN::Mini' ? ' (from CPAN::Mini)' : ''),
-    ", powered by $class ", ${"$class\:\:VERSION"}, "\n\n";
+    ($class ne 'CPAN::Mini' ? ' (from CPAN::Mini)' : q{}),
+    ", powered by $class ", $class->VERSION, "\n\n";
   exit;
 }
 

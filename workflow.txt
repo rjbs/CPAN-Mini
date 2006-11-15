@@ -1,0 +1,8 @@
+
+initialization
+get indices
+parse indices
+for each distro
+	next if filtered
+	mirror distro
+clean up

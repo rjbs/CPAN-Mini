@@ -1,0 +1,117 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+
+=head1 NAME
+
+minicpan - uses CPAN::Mini to create or update a local mirror
+
+=head1 SYNOPSIS
+
+ minicpan [options]
+
+ Options
+   -l LOCAL   - where is the local minicpan?     (required)
+   -r REMOTE  - where is the remote cpan mirror? (required)
+   -d 0###    - permissions (numeric) to use when creating directories
+   -f         - check all directories, even if indices are unchanged
+   -p         - mirror perl, ponie, and parrot distributions
+   -q         - run in quiet mode (don't print status)
+   -qq        - run in silent mode (don't even print warnings)
+
+=head1 DESCRIPTION
+
+This simple shell script just updates (or creates) a miniature CPAN mirror as
+described in CPAN::Mini.
+
+The local and remote mirror locations are (for now) hardcoded and should be
+updated before running this script for the first time.
+
+=cut
+
+use CPAN::Mini;
+use File::HomeDir;
+use File::Spec;
+use Getopt::Long qw(GetOptions);
+use Pod::Usage;
+
+sub display_version {
+  my $class = shift;
+  no strict 'refs';
+  print "minicpan",
+    ($class ne 'CPAN::Mini' ? ' (from CPAN::Mini)' : q{}),
+    ", powered by $class ", $class->VERSION, "\n\n";
+  exit;
+}
+
+my %config = CPAN::Mini->read_config;
+my $class  = 'CPAN::Mini';
+my $version;
+
+GetOptions(
+  "c|class=s"   => \$class,
+  "h|help"      => sub { pod2usage(1); },
+  "v|version"   => sub { $version = 1 },
+  "l|local=s"   => \$config{local},
+  "r|remote=s"  => \$config{remote},
+  "d|dirmode=s" => \$config{dirmode},
+  "qq"          => sub { $config{quiet} = 2; $config{errors} = 0; },
+  "q+" => \$config{quiet},
+  "f+" => \$config{force},
+  "p+" => \$config{perl},
+  "x+" => \$config{exact_mirror},
+) or pod2usage(2);
+
+eval "require $class";
+die $@ if $@;
+
+display_version($class) if $version;
+pod2usage(2) unless $config{local} and $config{remote};
+
+$|++;
+$config{dirmode} &&= oct($config{dirmode});
+
+CPAN::Mini->update_mirror(
+  remote  => $config{remote},
+  local   => $config{local},
+  trace   => (not $config{quiet}),
+  force   => $config{force},
+  dirmode => $config{dirmode},
+  also_mirror    => $config{also_mirror},
+  exact_mirror   => ($config{exact_mirror}),
+  module_filters => ($config{module_filters}),
+  path_filters   => ($config{path_filters}),
+  skip_perl      => (not $config{perl}),
+  (defined $config{errors} ? (errors  => $config{errors}) : ()),
+);
+
+=head1 CONFIGURATION FILE
+
+C<minicpan> will read the file C<~/.minicpanrc> to get configuration
+information.  The file is a simple set of names and values, as in the following
+example:
+
+ local:  /home/rjbs/mirrors/minicpan/
+ remote: http://your.favorite.cpan/cpan/
+ exact_mirror: 1
+
+=head1 TO DO
+
+Improve command-line options.
+
+=head1 SEE ALSO 
+
+Randal Schwartz's original article, which can be found here:
+
+  http://www.stonehenge.com/merlyn/LinuxMag/col42.html
+
+=head1 AUTHORS
+
+Randal Schwartz <F<merlyn@stonehenge.com>> did all the work.
+
+Ricardo SIGNES <F<rjbs@cpan.org>> made a module and distribution.
+
+This code was copyrighted in 2004, and is released under the same terms as Perl
+itself.
+
+=cut

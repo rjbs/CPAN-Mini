@@ -18,14 +18,15 @@ minicpan - uses CPAN::Mini to create or update a local mirror
    -p         - mirror perl, ponie, and parrot distributions
    -q         - run in quiet mode (don't print status)
    -qq        - run in silent mode (don't even print warnings)
+   -c CLASS   - what class to use to mirror (default: CPAN::Mini)
+   -h         - print help and exit
+   -v         - print version and exit
+   -x         - build an exact mirror, getting even normally disallowed files
 
 =head1 DESCRIPTION
 
 This simple shell script just updates (or creates) a miniature CPAN mirror as
 described in CPAN::Mini.
-
-The local and remote mirror locations are (for now) hardcoded and should be
-updated before running this script for the first time.
 
 =cut
 

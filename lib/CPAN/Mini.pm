@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.551';
+our $VERSION = '0.552';
 
 ## no critic RequireCarping
 
@@ -12,7 +12,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.551
+version 0.552
 
  $Id$
 
@@ -89,6 +89,10 @@ The following options are recognized:
 
 Generally an octal number, this option sets the permissions of created
 directories.  It defaults to 0711.
+
+=item * C<exact_mirror>
+
+If true, the C<files_allowed> method will allow all extra files to be mirrored.
 
 =item * C<force>
 
@@ -366,7 +370,8 @@ sub _filter_module {
 This method returns true if the given file is allowed to exist in the local
 mirror, even if it isn't one of the required mirror files.
 
-By default, only dot-files are allowed.
+By default, only dot-files are allowed.  If the C<exact_mirror> option is true,
+all files are allowed.
 
 =cut
 

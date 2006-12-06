@@ -512,6 +512,9 @@ bioperl, and Robert Rothenberg for suggesting adding coderef rules.
 Thanks to Adam Kennedy for noticing and complaining about a lot of stupid
 little design decisions.
 
+Thanks to Michael Schwern and Jason Kohles, for pointing out missing
+documentation.
+
 =head1 AUTHORS
 
 Randal Schwartz <F<merlyn@stonehenge.com>> wrote the original F<minicpan>

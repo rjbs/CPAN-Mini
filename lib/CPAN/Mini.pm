@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.552';
+our $VERSION = '0.560_01';
 
 ## no critic RequireCarping
 
@@ -265,7 +265,7 @@ sub mirror_indices {
 
     File::Copy::copy($local_file, $scratch_file);
 
-    # utime((stat $local_file)[8,9], $scratch_file);
+    utime((stat $local_file)[8,9], $scratch_file);
 
     $self->mirror_file($path, undef, { to_scratch => 1 });
   }
@@ -361,7 +361,7 @@ sub mirror_file {
 
 	if ($path =~ m{^authors/id}) { # maybe fetch CHECKSUMS
 		my $checksum_path =
-			URI->new_abs("CHECKSUMS", $remote_uri)->rel($self->{remote});
+			URI->new_abs("CHECKSUMS", $remote_uri)->rel($self->{remote})->as_string;
 		if ($path ne $checksum_path) {
 			$self->mirror_file($checksum_path, $checksum_might_be_up_to_date);
 		}

@@ -12,7 +12,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.552
+version 0.560_01
 
  $Id$
 
@@ -51,10 +51,12 @@ the newest version of every distribution.  Those files are:
 
 use Carp ();
 
-use File::Path ();
 use File::Basename ();
-use File::Spec ();
+use File::Copy ();
 use File::Find ();
+use File::Path ();
+use File::Spec ();
+use File::Temp ();
 
 use URI ();
 use LWP::Simple ();
@@ -160,9 +162,11 @@ sub update_mirror {
 
 	return unless $self->{force} or $self->{changes_made};
 
+  $self->_mirror_extras;
+
 	# now walk the packages list
 	my $details = File::Spec->catfile(
-    $self->{local},
+    $self->{scratch},
     qw(modules 02packages.details.txt.gz)
   );
 
@@ -185,6 +189,8 @@ sub update_mirror {
 
 		$self->mirror_file("authors/id/$path", 1);
 	}
+
+  $self->_install_indices;
 
 	# eliminate files we don't need
 	$self->clean_unmirrored unless $self->{skip_cleanup};
@@ -210,6 +216,8 @@ sub new {
   );
 
 	my $self = bless { %defaults, @_ } => $class;
+
+  $self->{scratch} ||= File::Temp::tempdir(CLEANUP => 1);
 
 	Carp::croak "no local mirror supplied"  unless $self->{local};
 
@@ -243,13 +251,55 @@ sub mirror_indices {
 	my $self = shift;
 
   my @fixed_mirrors = qw(
-      authors/01mailrc.txt.gz
-      modules/02packages.details.txt.gz
-      modules/03modlist.data.gz
+    authors/01mailrc.txt.gz
+    modules/02packages.details.txt.gz
+    modules/03modlist.data.gz
+  );
+
+  File::Path::mkpath(File::Spec->catdir($self->{scratch}, $_))
+    for qw(authors modules);
+
+  for my $path (@fixed_mirrors, @{$self->{also_mirror}}) {
+    my $local_file   = File::Spec->catfile($self->{local}, split m{/}, $path);
+    my $scratch_file = File::Spec->catfile($self->{scratch}, split m{/}, $path);
+
+    File::Copy::copy($local_file, $scratch_file);
+
+    # utime((stat $local_file)[8,9], $scratch_file);
+
+    $self->mirror_file($path, undef, { to_scratch => 1 });
+  }
+}
+
+sub _mirror_extras {
+	my $self = shift;
+
+  for my $path (@{$self->{also_mirror}}) {
+    $self->mirror_file($path, undef);
+  }
+}
+
+sub _install_indices {
+	my $self = shift;
+
+  my @fixed_mirrors = qw(
+    authors/01mailrc.txt.gz
+    modules/02packages.details.txt.gz
+    modules/03modlist.data.gz
+  );
+
+  for my $path (@fixed_mirrors) {
+    my $local_file = File::Spec->catfile($self->{local}, split m{/}, $path);
+
+    unlink $local_file;
+
+    File::Copy::copy(
+      File::Spec->catfile($self->{scratch}, split m{/}, $path),
+      File::Spec->catfile($self->{local},   split m{/}, $path),
     );
 
-  # XXX: Should the 0 be a 1, below? -- rjbs, 2006-08-08
-	$self->mirror_file($_, undef, 0) for @fixed_mirrors, @{$self->{also_mirror}};
+		$self->{mirrored}{$local_file} = 1;
+  }
 }
 
 =head2 mirror_file
@@ -262,16 +312,20 @@ overwriting any existing file unless C<$skip_if_present> is true.
 =cut
 
 sub mirror_file {
-	my $self   = shift;
-	my $path   = shift;           # partial URL
-	my $skip_if_present = shift;  # true/false
-  my $update_times    = shift;  # true/false
+  my ($self, $path, $skip_if_present, $arg) = @_;
+
+  $arg ||= {};
 
   # full URL
-	my $remote_uri = URI->new_abs($path, $self->{remote})->as_string;
+	my $remote_uri = eval { $path->isa('URI') }
+                 ? $path
+                 : URI->new_abs($path, $self->{remote})->as_string;
 
   # native absolute file
-	my $local_file = File::Spec->catfile($self->{local}, split m{/}, $path);
+	my $local_file = File::Spec->catfile(
+    $arg->{to_scratch} ? $self->{scratch} : $self->{local},
+    split m{/}, $path
+  );
 
 	my $checksum_might_be_up_to_date = 1;
 
@@ -292,7 +346,7 @@ sub mirror_file {
 		my $status = LWP::Simple::mirror($remote_uri, $local_file);
 
 		if ($status == LWP::Simple::RC_OK) {
-      utime undef, undef, $local_file if $update_times;
+      utime undef, undef, $local_file if $arg->{update_times};
 			$checksum_might_be_up_to_date = 0;
 			$self->trace(" ... updated\n");
 			$self->{changes_made}++;
@@ -321,13 +375,12 @@ sub mirror_file {
  next if
    $self->_filter_module({ module => $foo, version => $foo, path => $foo });
 
-This internal-only method encapsulates the logic where we figure out if a
-module is to be mirrored or not. Better stated, this method holds the filter
-chain logic. C<update_mirror()> takes an optional set of filter parameters.  As
-C<update_mirror()> encounters a distribution, it calls this method to figure
-out whether or not it should be downloaded. The user provided filters are taken
-into account. Returns 1 if the distribution is filtered (to be skipped).
-Returns 0 if the distribution is to not filtered (not to be skipped).
+This method holds the filter chain logic. C<update_mirror> takes an optional
+set of filter parameters.  As C<update_mirror> encounters a distribution, it
+calls this method to figure out whether or not it should be downloaded. The
+user provided filters are taken into account. Returns 1 if the distribution is
+filtered (to be skipped).  Returns 0 if the distribution is to not filtered
+(not to be skipped).
 
 =end devel
 

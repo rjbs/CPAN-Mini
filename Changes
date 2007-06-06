@@ -1,3 +1,6 @@
+0.560_02  2007-??-??
+          also skip kurila when skipping perl, in case kurila gets indexed
+
 0.560_01  2007-04-25
           initially mirror indices to a scratch space, so that the indices in
           the minicpan are not replaced until all referenced files are in place

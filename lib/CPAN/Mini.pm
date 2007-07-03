@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.560_01';
+our $VERSION = '0.561';
 
 ## no critic RequireCarping
 
@@ -12,7 +12,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.560_01
+version 0.561
 
  $Id$
 

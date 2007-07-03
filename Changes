@@ -1,10 +1,8 @@
-0.560_02  2007-??-??
-          also skip kurila when skipping perl, in case kurila gets indexed
-          also sip perl_mlb.zip when skipping perl
-
-0.560_01  2007-04-25
+0.561     2007-07-03
           initially mirror indices to a scratch space, so that the indices in
           the minicpan are not replaced until all referenced files are in place
+
+          when skipping perls, also skip: kurila, perl_mlb
 
 0.552     2006-12-01
           documentation fixes

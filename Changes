@@ -1,0 +1,77 @@
+0.562     2007-07-04
+          fix skip_perl to continue to skip a perl-like dist
+
+0.561     2007-07-03
+          initially mirror indices to a scratch space, so that the indices in
+          the minicpan are not replaced until all referenced files are in place
+
+          when skipping perls, also skip: kurila, perl_mlb
+
+0.552     2006-12-01
+          documentation fixes
+
+0.551     2006-11-13
+          packaging improvements
+
+0.550     2006-08-08
+          add tilde expansion for homedir in local mirror specification
+          move configuration reading into CPAN::Mini
+          document a few previously-undocumented things
+          documentation cleanup
+          added unused-by-script option to use current mtime for indices
+           (this helps CPANPLUS do the right thing)
+
+0.500     2006-07-11
+          we no longer need File::HomeDir::Win32 on Windows
+          provide the also_mirror option to get other static files
+
+0.40      2005-11-04
+          remove force option to trace
+          create local mirror if needed
+          notice if local mirror -e && ! -d
+          cleared out stupid /\A\s+\z/ lines
+
+0.38      2005-10-13 00:05
+          more intelligently divide cleanup tasks (isn't ADAMK great?)
+          move arg validity check constructor (to silence ADAMK)
+          add some more checks for validity (stolen from ADAMK)
+          add errors option and -qq commandline option for it
+
+0.36	    2005-01-06 18:40
+			    code refs can be passed to _filters, which were slightly refactored
+
+0.32	    2004-12-31 15:45
+          added an old alpha binary for perl to the perls to skip
+
+0.30      2004-12-28 10:00
+          added a "new" method for construction
+          update_mirror can act as class or instance method
+          added clean_file method
+
+0.26      2004-12-02 15:05
+          require version 5.6 of perl in Makefile.PL
+
+0.24      2004-11-29 14:30
+          dirmode is correctly octalized (thanks SSORICHE)
+          sungo's *_filters patch
+
+0.20      2004-09-28 10:20
+          added config file
+          added file_allowed (to override cleanup)
+          the -d option, long documented, now works
+
+0.18      2004-09-21 20:15
+          canonpath File::Find::name to avoid horrible Win32 bug
+          added -v to print version of CPAN::Mini
+
+0.16      2004-09-07 21:50
+          added -d to set mode for created dirs
+
+0.14      2004-08-28 17:05
+          uses Pod::Usage
+          now skips ponie and parrot (not just perl)
+          -p option to override the above skipping
+          "seen_changes" attribute and return value added
+
+0.10      2004-08-26 10:50
+          initial release

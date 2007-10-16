@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.562';
+our $VERSION = '0.563';
 
 ## no critic RequireCarping
 
@@ -12,9 +12,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.562
-
- $Id$
+version 0.563
 
 =head1 SYNOPSIS
 
@@ -233,6 +231,9 @@ sub new {
   Carp::croak "no write permission to local mirror" unless -w $self->{local};
 
 	Carp::croak "no remote mirror supplied" unless $self->{remote};
+
+  $self->{remote} = "$self->{remote}/" if substr($self->{remote}, -1) ne '/';
+
   Carp::croak "unable to contact the remote mirror"
     unless LWP::Simple::head($self->{remote});
 
@@ -288,14 +289,20 @@ sub _install_indices {
     modules/03modlist.data.gz
   );
 
-  for my $path (@fixed_mirrors) {
-    my $local_file = File::Spec->catfile($self->{local}, split m{/}, $path);
+  for my $dir (qw(authors modules)) {
+    my $needed = File::Spec->catdir($self->{local}, $dir);
+    File::Path::mkpath($needed, $self->{trace}, $self->{dirmode});
+    die "couldn't create $needed: $!" unless -d $needed;
+  }
+
+  for my $file (@fixed_mirrors) {
+    my $local_file = File::Spec->catfile($self->{local}, split m{/}, $file);
 
     unlink $local_file;
 
     File::Copy::copy(
-      File::Spec->catfile($self->{scratch}, split m{/}, $path),
-      File::Spec->catfile($self->{local},   split m{/}, $path),
+      File::Spec->catfile($self->{scratch}, split m{/}, $file),
+      $local_file,
     );
 
 		$self->{mirrored}{$local_file} = 1;

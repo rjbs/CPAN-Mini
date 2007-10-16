@@ -1,3 +1,8 @@
+0.563     2007-11-16
+          MAJOR BUG FIX: mirror files in ./modules
+            introduced in 0.561, this bug only affected new mirrors, so anyone
+            who had been using it before that would not have noticed
+
 0.562     2007-07-04
           fix skip_perl to continue to skip a perl-like dist
 

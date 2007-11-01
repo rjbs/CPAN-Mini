@@ -3,6 +3,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	'NAME'         => 'CPAN::Mini',
+  AUTHOR          => 'Ricardo SIGNES <rjbs@cpan.org>',
 	'VERSION_FROM' => 'lib/CPAN/Mini.pm',
 	'EXE_FILES'    => [ 'bin/minicpan' ],
   LICENSE        => 'perl',

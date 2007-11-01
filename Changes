@@ -1,4 +1,7 @@
-0.563     2007-11-16
+0.564     2007-10-31
+          tweak packaging for CPANTS
+
+0.563     2007-??-??
           MAJOR BUG FIX: mirror files in ./modules
             introduced in 0.561, this bug only affected new mirrors, so anyone
             who had been using it before that would not have noticed

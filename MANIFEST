@@ -1,5 +1,6 @@
 bin/minicpan
 lib/CPAN/Mini.pm
+lib/CPAN/Mini/App.pm
 Changes
 Makefile.PL
 MANIFEST			This list of files

@@ -89,3 +89,5 @@ Ricardo SIGNES <F<rjbs@cpan.org>>
 Copyright 2004, released under the same terms as Perl itself.
 
 =cut
+
+1;

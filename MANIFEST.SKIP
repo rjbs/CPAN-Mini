@@ -7,3 +7,6 @@ cover_db
 ^Makefile.old$
 \.bak$
 ^CPAN-*
+
+^minicpan.oo3
+^workflow.txt

@@ -1,18 +1,20 @@
 use 5.006;
-use ExtUtils::MakeMaker;
+use strict;
+use warnings;
 
-WriteMakefile(
-	'NAME'         => 'CPAN::Mini',
-  AUTHOR          => 'Ricardo SIGNES <rjbs@cpan.org>',
-	'VERSION_FROM' => 'lib/CPAN/Mini.pm',
-	'EXE_FILES'    => [ 'bin/minicpan' ],
-  LICENSE        => 'perl',
-	'PREREQ_PM'    => {
-		'URI' => 1,
-		'LWP' => 5,
-		'Compress::Zlib' => '1.20',
-    'File::HomeDir'  => '0.57', # Win32 Support
-		'Pod::Usage'     => 1,
-	},
-	'PREREQ_PRINT' => 1
-);
+use inc::Module::Install;
+
+name          ('CPAN-Mini');
+author        ('Ricardo SIGNES <rjbs@cpan.org>');
+license       ('perl');
+all_from      ('lib/CPAN/Mini.pm');
+
+requires(URI => 1);
+requires(LWP => 5);
+requires('Compress::Zlib' => '1.20');
+requires('File::HomeDir'  => '0.57'); # Win32 Support
+requires('Pod::Usage'     => '1.00');
+
+install_script('bin/minicpan');
+
+WriteAll();

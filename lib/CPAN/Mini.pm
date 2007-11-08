@@ -1,8 +1,9 @@
+use 5.006;
 use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.564';
+our $VERSION = '0.565';
 
 ## no critic RequireCarping
 
@@ -12,7 +13,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.564
+version 0.565
 
 =head1 SYNOPSIS
 

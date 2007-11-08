@@ -1,3 +1,8 @@
+0.565     2007-11-08
+          move guts of minicpan command to ::App
+          CPANTS tweaks
+          switch to Module::Install
+
 0.564     2007-10-31
           tweak packaging for CPANTS
 

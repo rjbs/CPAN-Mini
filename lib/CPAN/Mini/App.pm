@@ -22,7 +22,7 @@ use File::Spec;
 use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
-sub display_version {
+sub _display_version {
   my $class = shift;
   no strict 'refs';
   print "minicpan",
@@ -30,6 +30,13 @@ sub display_version {
     ", powered by $class ", $class->VERSION, "\n\n";
   exit;
 }
+
+=head2 run
+
+This method is called by F<minicpan> to do all the work.  Don't rely on what it
+does just yet.
+
+=cut
 
 sub run {
   my %config = CPAN::Mini->read_config;
@@ -53,7 +60,7 @@ sub run {
   eval "require $class";
   die $@ if $@;
 
-  display_version($class) if $version;
+  _display_version($class) if $version;
   pod2usage(2) unless $config{local} and $config{remote};
 
   $|++;

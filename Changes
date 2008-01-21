@@ -1,3 +1,8 @@
+Revision history for CPAN-Mini
+
+0.566     2008-01-21
+          do not mirror "also_mirror" files twice (thanks DAGOLDEN)
+
 0.565     2007-11-08
           move guts of minicpan command to ::App
           CPANTS tweaks

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.565';
+our $VERSION = '0.566';
 
 ## no critic RequireCarping
 
@@ -13,7 +13,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.565
+version 0.566
 
 =head1 SYNOPSIS
 
@@ -249,19 +249,21 @@ This method updates the index files from the CPAN.
 
 =cut
 
-sub mirror_indices {
-	my $self = shift;
-
-  my @fixed_mirrors = qw(
+sub _fixed_mirrors {
+  qw(
     authors/01mailrc.txt.gz
     modules/02packages.details.txt.gz
     modules/03modlist.data.gz
   );
+}
+
+sub mirror_indices {
+	my $self = shift;
 
   File::Path::mkpath(File::Spec->catdir($self->{scratch}, $_))
     for qw(authors modules);
 
-  for my $path (@fixed_mirrors, @{$self->{also_mirror}}) {
+  for my $path ($self->_fixed_mirrors) {
     my $local_file   = File::Spec->catfile($self->{local}, split m{/}, $path);
     my $scratch_file = File::Spec->catfile($self->{scratch}, split m{/}, $path);
 
@@ -284,19 +286,13 @@ sub _mirror_extras {
 sub _install_indices {
 	my $self = shift;
 
-  my @fixed_mirrors = qw(
-    authors/01mailrc.txt.gz
-    modules/02packages.details.txt.gz
-    modules/03modlist.data.gz
-  );
-
   for my $dir (qw(authors modules)) {
     my $needed = File::Spec->catdir($self->{local}, $dir);
     File::Path::mkpath($needed, $self->{trace}, $self->{dirmode});
     die "couldn't create $needed: $!" unless -d $needed;
   }
 
-  for my $file (@fixed_mirrors) {
+  for my $file ($self->_fixed_mirrors) {
     my $local_file = File::Spec->catfile($self->{local}, split m{/}, $file);
 
     unlink $local_file;

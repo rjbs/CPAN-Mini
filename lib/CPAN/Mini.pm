@@ -152,48 +152,60 @@ has finished mirroring
 =cut
 
 sub update_mirror {
-	my $self  = shift;
-	$self = $self->new(@_) unless ref $self;
+    my $self  = shift;
+    $self = $self->new(@_) unless ref $self;
 
-	# mirrored tracks the already done, keyed by filename
-	# 1 = local-checked, 2 = remote-mirrored
-	$self->mirror_indices;
+    # mirrored tracks the already done, keyed by filename
+    # 1 = local-checked, 2 = remote-mirrored
+    $self->mirror_indices;
 
-	return unless $self->{force} or $self->{changes_made};
+    return unless $self->{force} or $self->{changes_made};
 
-  $self->_mirror_extras;
+    # mirror all the files
+    $self->_mirror_extras;
+    $self->mirror_file($_, 1) for @{ $self->_get_mirror_list };
 
-	# now walk the packages list
-	my $details = File::Spec->catfile(
-    $self->{scratch},
-    qw(modules 02packages.details.txt.gz)
-  );
+    # install indices after files are mirrored in case we're interrupted
+    # so indices will seem new again when continuing
+    $self->_install_indices;
 
-	my $gz = Compress::Zlib::gzopen($details, "rb")
-    or die "Cannot open details: $Compress::Zlib::gzerrno";
+    # eliminate files we don't need
+    $self->clean_unmirrored unless $self->{skip_cleanup};
+    return $self->{changes_made};
+}
 
-	my $inheader = 1;
-	while ($gz->gzreadline($_) > 0) {
-		if ($inheader) {
-			$inheader = 0 unless /\S/;
-			next;
-		}
+sub _get_mirror_list {
+    my $self = shift;
 
-		my ($module, $version, $path) = split;
-		next if $self->_filter_module({
-			module  => $module,
-			version => $version,
-			path    => $path,
-		});
+    my %mirror_list;
 
-		$self->mirror_file("authors/id/$path", 1);
-	}
+    # now walk the packages list
+    my $details = File::Spec->catfile(
+        $self->{scratch},
+        qw(modules 02packages.details.txt.gz)
+    );
 
-  $self->_install_indices;
+    my $gz = Compress::Zlib::gzopen($details, "rb")
+        or die "Cannot open details: $Compress::Zlib::gzerrno";
 
-	# eliminate files we don't need
-	$self->clean_unmirrored unless $self->{skip_cleanup};
-	return $self->{changes_made};
+    my $inheader = 1;
+    while ($gz->gzreadline($_) > 0) {
+        if ($inheader) {
+            $inheader = 0 unless /\S/;
+            next;
+        }
+
+        my ($module, $version, $path) = split;
+        next if $self->_filter_module({
+                module  => $module,
+                version => $version,
+                path    => $path,
+            });
+
+        $mirror_list{"authors/id/$path"}++;
+    }
+
+    return [ sort keys %mirror_list ];
 }
 
 =head2 new

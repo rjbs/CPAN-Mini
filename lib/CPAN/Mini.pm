@@ -260,8 +260,7 @@ sub _fixed_mirrors {
 sub mirror_indices {
 	my $self = shift;
 
-  File::Path::mkpath(File::Spec->catdir($self->{scratch}, $_))
-    for qw(authors modules);
+    $self->_make_index_dirs( $self->{scratch} );
 
   for my $path ($self->_fixed_mirrors) {
     my $local_file   = File::Spec->catfile($self->{local}, split m{/}, $path);
@@ -283,14 +282,24 @@ sub _mirror_extras {
   }
 }
 
+sub _make_index_dirs {
+    my ($self, $base_dir, $dir_mode, $trace) = @_;
+    $base_dir ||= $self->{scratch};
+    $dir_mode = 0711 if ! defined $dir_mode; ## no critic Zero
+    $trace = 0 if ! defined $trace;
+
+    for my $index ( $self->_fixed_mirrors ) {
+        my $dir = File::Basename::dirname( $index );
+        my $needed = File::Spec->catdir($base_dir, $dir);
+        File::Path::mkpath($needed, $trace, $dir_mode);
+        die "couldn't create $needed: $!" unless -d $needed;
+    }
+}
+
 sub _install_indices {
 	my $self = shift;
 
-  for my $dir (qw(authors modules)) {
-    my $needed = File::Spec->catdir($self->{local}, $dir);
-    File::Path::mkpath($needed, $self->{trace}, $self->{dirmode});
-    die "couldn't create $needed: $!" unless -d $needed;
-  }
+    $self->_make_index_dirs( $self->{local}, $self->{dirmode}, $self->{trace} );
 
   for my $file ($self->_fixed_mirrors) {
     my $local_file = File::Spec->catfile($self->{local}, split m{/}, $file);

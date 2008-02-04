@@ -66,7 +66,7 @@ sub run {
   $|++;
   $config{dirmode} &&= oct($config{dirmode});
 
-  CPAN::Mini->update_mirror(
+  $class->update_mirror(
     remote  => $config{remote},
     local   => $config{local},
     trace   => (not $config{quiet}),

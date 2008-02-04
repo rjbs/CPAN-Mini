@@ -40,11 +40,11 @@ does just yet.
 
 sub run {
   my %config = CPAN::Mini->read_config;
-  my $class  = 'CPAN::Mini';
+  $config{class} ||= 'CPAN::Mini';
   my $version;
 
   GetOptions(
-    "c|class=s"   => \$class,
+    "c|class=s"   => \$config{class},
     "h|help"      => sub { pod2usage(1); },
     "v|version"   => sub { $version = 1 },
     "l|local=s"   => \$config{local},
@@ -57,16 +57,16 @@ sub run {
     "x+" => \$config{exact_mirror},
   ) or pod2usage(2);
 
-  eval "require $class";
+  eval "require $config{class}";
   die $@ if $@;
 
-  _display_version($class) if $version;
+  _display_version($config{class}) if $version;
   pod2usage(2) unless $config{local} and $config{remote};
 
   $|++;
   $config{dirmode} &&= oct($config{dirmode});
 
-  $class->update_mirror(
+  $config{class}->update_mirror(
     remote  => $config{remote},
     local   => $config{local},
     trace   => (not $config{quiet}),

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.566';
+our $VERSION = '0.567';
 
 ## no critic RequireCarping
 
@@ -13,7 +13,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.566
+version 0.567
 
 =head1 SYNOPSIS
 
@@ -596,6 +596,8 @@ little design decisions.
 
 Thanks to Michael Schwern and Jason Kohles, for pointing out missing
 documentation.
+
+Thanks to David Golden for some important bugfixes and refactoring.
 
 =head1 AUTHORS
 

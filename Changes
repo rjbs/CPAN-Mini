@@ -1,5 +1,10 @@
 Revision history for CPAN-Mini
 
+0.567     2008-02-05
+          BUGFIX: actually respect -c option
+          internal refactoring to make subclassing easier (DAGOLDEN)
+          bring code formatting inline with other (code (simply)) code
+
 0.566     2008-01-21
           do not mirror "also_mirror" files twice (thanks DAGOLDEN)
 

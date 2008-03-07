@@ -15,6 +15,8 @@ requires('Compress::Zlib' => '1.20');
 requires('File::HomeDir'  => '0.57'); # Win32 Support
 requires('Pod::Usage'     => '1.00');
 
+author_tests('xt');
+
 install_script('bin/minicpan');
 
 WriteAll();

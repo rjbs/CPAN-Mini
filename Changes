@@ -1,5 +1,9 @@
 Revision history for CPAN-Mini
 
+0.568     2008-03-05
+          [ no code changes ]
+          fix distribution to remove resource forks (ugh!)
+
 0.567     2008-02-05
           BUGFIX: actually respect -c option
           internal refactoring to make subclassing easier (DAGOLDEN)

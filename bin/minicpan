@@ -27,6 +27,7 @@ minicpan - uses CPAN::Mini to create or update a local mirror
    -h         - print help and exit
    -v         - print version and exit
    -x         - build an exact mirror, getting even normally disallowed files
+   --offline  - operate in offline mode (generally: do nothing)
 
 =head1 DESCRIPTION
 
@@ -55,9 +56,11 @@ Randal Schwartz's original article, which can be found here:
 
 =head1 AUTHORS
 
-Randal Schwartz <F<merlyn@stonehenge.com>> did all the work.
+Randal Schwartz <F<merlyn@stonehenge.com>> had the bright idea and wrote the
+original implementation.
 
-Ricardo SIGNES <F<rjbs@cpan.org>> made a module and distribution.
+Ricardo SIGNES <F<rjbs@cpan.org>> brazenly took the script, made a module and
+distribution, and slowly allowed it to gain features.
 
 This code was copyrighted in 2004, and is released under the same terms as Perl
 itself.

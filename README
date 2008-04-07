@@ -1,4 +1,4 @@
-README for CPAN::Mini
+README for CPAN::Mini 0.569
 
 CPAN::Mini provides a simple mechanism to build and update a minimal mirror of
 the CPAN on your local disk.  It contains only those files needed to install

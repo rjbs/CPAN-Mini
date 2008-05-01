@@ -1,5 +1,9 @@
 Revision history for CPAN-Mini
 
+0.570     2008-05-01
+          offline mode now (correctly) means that the remote is not checked for
+          availability (RT #35563)
+
 0.569     2008-04-30
           massive speed improvements by caching connection to remote mirror
           add offline mode (by request of ADAMK)

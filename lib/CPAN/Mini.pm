@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.569';
+our $VERSION = '0.570';
 
 ## no critic RequireCarping
 
@@ -13,7 +13,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.569
+version 0.570
 
 =head1 SYNOPSIS
 
@@ -258,8 +258,10 @@ sub new {
     keep_alive => 5,
   );
 
-  Carp::croak "unable to contact the remote mirror"
-    unless eval { $self->__lwp->head($self->{remote})->is_success };
+  unless ($self->{offline}) {
+    Carp::croak "unable to contact the remote mirror"
+      unless eval { $self->__lwp->head($self->{remote})->is_success };
+  }
 
   return $self;
 }

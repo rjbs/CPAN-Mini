@@ -58,7 +58,7 @@ use File::Spec ();
 use File::Temp ();
 
 use URI ();
-use LWP::Simple ();
+use LWP::UserAgent ();
 
 use Compress::Zlib ();
 
@@ -253,11 +253,18 @@ sub new {
 
   $self->{remote} = "$self->{remote}/" if substr($self->{remote}, -1) ne '/';
 
+  $self->{__lwp} = LWP::UserAgent->new(
+    agent      => "$class/" . $class->VERSION,
+    keep_alive => 5,
+  );
+
   Carp::croak "unable to contact the remote mirror"
-    unless LWP::Simple::head($self->{remote});
+    unless eval { $self->__lwp->head($self->{remote})->is_success };
 
   return $self;
 }
+
+sub __lwp { $_[0]->{__lwp} }
 
 =head2 mirror_indices
 
@@ -372,15 +379,15 @@ sub mirror_file {
       $self->{trace}, $self->{dirmode});
 
     $self->trace($path);
-    my $status = LWP::Simple::mirror($remote_uri, $local_file);
+    my $res = $self->{__lwp}->mirror($remote_uri, $local_file);
 
-    if ($status == LWP::Simple::RC_OK) {
+    if ($res->is_success) {
       utime undef, undef, $local_file if $arg->{update_times};
       $checksum_might_be_up_to_date = 0;
       $self->trace(" ... updated\n");
       $self->{changes_made}++;
-    } elsif ($status != LWP::Simple::RC_NOT_MODIFIED) {
-      warn(($self->{trace} ? "\n" : q{}) . "$remote_uri: $status\n")
+    } elsif ($res->code != 304) { # not modified
+      warn(($self->{trace} ? "\n" : q{}) . "$remote_uri: " . $res->status_line .  "\n")
         if $self->{errors};
       return;
     } else {

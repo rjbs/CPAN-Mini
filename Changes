@@ -1,5 +1,10 @@
 Revision history for CPAN-Mini
 
+0.569     2008-04-30
+          massive speed improvements by caching connection to remote mirror
+          add offline mode (by request of ADAMK)
+          add default config file location (by request of ADAMK)
+
 0.568     2008-03-05
           [ no code changes ]
           fix distribution to remove resource forks (ugh!)

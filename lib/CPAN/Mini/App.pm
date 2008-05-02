@@ -75,9 +75,10 @@ sub run {
     dirmode => $config{dirmode},
     offline => $config{offline},
     also_mirror    => $config{also_mirror},
-    exact_mirror   => ($config{exact_mirror}),
-    module_filters => ($config{module_filters}),
-    path_filters   => ($config{path_filters}),
+    exact_mirror   => $config{exact_mirror},
+    module_filters => $config{module_filters},
+    path_filters   => $config{path_filters},
+    skip_cleanup   => $config{skip_cleanup},
     skip_perl      => (not $config{perl}),
     (defined $config{errors} ? (errors  => $config{errors}) : ()),
   );

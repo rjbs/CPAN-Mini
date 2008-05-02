@@ -1,5 +1,8 @@
 Revision history for CPAN-Mini
 
+0.571     2008-05-01
+          allow skip_cleanup in config
+
 0.570     2008-05-01
           offline mode now (correctly) means that the remote is not checked for
           availability (RT #35563)

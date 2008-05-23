@@ -1,6 +1,9 @@
 Revision history for CPAN-Mini
 
-0.571     2008-05-01
+0.571     2008-05-23
+          set LWP::UserAgent's env_proxy option to use proxy (RT #36124 from
+          IFOMICHEV)
+
           allow skip_cleanup in config
 
 0.570     2008-05-01

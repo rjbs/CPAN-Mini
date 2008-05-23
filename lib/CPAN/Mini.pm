@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.570';
+our $VERSION = '0.571';
 
 ## no critic RequireCarping
 
@@ -13,7 +13,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.570
+version 0.571
 
 =head1 SYNOPSIS
 
@@ -255,6 +255,7 @@ sub new {
 
   $self->{__lwp} = LWP::UserAgent->new(
     agent      => "$class/" . $class->VERSION,
+    env_proxy  => 1,
     keep_alive => 5,
   );
 

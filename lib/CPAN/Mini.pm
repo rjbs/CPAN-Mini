@@ -581,7 +581,7 @@ sub read_config {
   while (<$config_file>) {
     chomp;
     next if /\A\s*\Z/sm;
-    if (/\A(\w+):\s*(.+)\Z/sm) { $config{$1} = $2; }
+    if (/\A(\w+):\s*(\S.*?)\s*\Z/sm) { $config{$1} = $2; }
   }
 
   for (qw(also_mirror)) {

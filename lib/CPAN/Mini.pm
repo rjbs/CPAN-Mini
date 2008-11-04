@@ -52,6 +52,7 @@ use Carp ();
 
 use File::Basename ();
 use File::Copy ();
+use File::HomeDir ();
 use File::Find ();
 use File::Path ();
 use File::Spec ();

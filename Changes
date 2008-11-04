@@ -1,5 +1,8 @@
 Revision history for CPAN-Mini
 
+0.572     2008-11-0
+          add 'use File::HomeDir' to CPAN/Mini.pm (thanks DAGOLDEN)
+
 0.571     2008-05-23
           set LWP::UserAgent's env_proxy option to use proxy (RT #36124 from
           IFOMICHEV)

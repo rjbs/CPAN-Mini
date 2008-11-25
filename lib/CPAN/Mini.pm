@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 package CPAN::Mini;
-our $VERSION = '0.572';
+our $VERSION = '0.573';
 
 ## no critic RequireCarping
 
@@ -13,7 +13,7 @@ CPAN::Mini - create a minimal mirror of CPAN
 
 =head1 VERSION
 
-version 0.572
+version 0.573
 
 =head1 SYNOPSIS
 
@@ -54,7 +54,7 @@ use File::Basename ();
 use File::Copy ();
 use File::HomeDir ();
 use File::Find ();
-use File::Path ();
+use File::Path 2.04 ();
 use File::Spec ();
 use File::Temp ();
 
@@ -175,11 +175,30 @@ sub update_mirror {
     # so indices will seem new again when continuing
     $self->_install_indices;
 
+    $self->_write_out_recent;
+
     # eliminate files we don't need
     $self->clean_unmirrored unless $self->{skip_cleanup};
   }
 
   return $self->{changes_made};
+}
+
+sub _recent { $_[0]->{recent}{$_[1]} = 1 };
+
+sub _write_out_recent {
+  my ($self) = @_;
+  return unless my @keys = keys %{ $self->{recent} };
+
+  my $recent = File::Spec->catfile($self->{local}, 'RECENT');
+  open my $recent_fh, '>', $recent or die "can't open $recent for writing: $!";
+
+  for my $file (sort keys %{ $self->{recent} }) {
+    print $recent_fh "$file\n" or die "can't write to $recent: $!";
+  }
+
+  die "error closing $recent: $!" unless close $recent_fh;
+  return;
 }
 
 sub _get_mirror_list {
@@ -234,6 +253,9 @@ sub new {
 
   my $self = bless { %defaults, @_ } => $class;
 
+  $self->{dirmode} = $defaults{dirmode} unless defined $self->{dirmode};
+
+  $self->{recent} = {};
   $self->{scratch} ||= File::Temp::tempdir(CLEANUP => 1);
 
   Carp::croak "no local mirror supplied" unless $self->{local};
@@ -245,8 +267,15 @@ sub new {
     if (-e $self->{local})
     and not(-d $self->{local});
 
-  File::Path::mkpath($self->{local}, $self->{trace}, $self->{dirmode})
-    unless -e $self->{local};
+  unless (-e $self->{local}) {
+    File::Path::mkpath(
+      $self->{local},
+      {
+        verbose => $self->{trace},
+        mode    => $self->{dirmode},
+      },
+    );
+  }
 
   Carp::croak "no write permission to local mirror" unless -w $self->{local};
 
@@ -320,7 +349,7 @@ sub _make_index_dirs {
   for my $index ($self->_fixed_mirrors) {
     my $dir = File::Basename::dirname($index);
     my $needed = File::Spec->catdir($base_dir, $dir);
-    File::Path::mkpath($needed, $trace, $dir_mode);
+    File::Path::mkpath($needed, { verbose => $trace, mode => $dir_mode });
     die "couldn't create $needed: $!" unless -d $needed;
   }
 }
@@ -379,8 +408,13 @@ sub mirror_file {
     ## upgrade to full mirror
     $self->{mirrored}{$local_file} = 2;
 
-    File::Path::mkpath(File::Basename::dirname($local_file),
-      $self->{trace}, $self->{dirmode});
+    File::Path::mkpath(
+      File::Basename::dirname($local_file),
+      {
+        verbose => $self->{trace},
+        mode    => $self->{dirmode},
+      },
+    );
 
     $self->trace($path);
     my $res = $self->{__lwp}->mirror($remote_uri, $local_file);
@@ -388,6 +422,7 @@ sub mirror_file {
     if ($res->is_success) {
       utime undef, undef, $local_file if $arg->{update_times};
       $checksum_might_be_up_to_date = 0;
+      $self->_recent($path);
       $self->trace(" ... updated\n");
       $self->{changes_made}++;
     } elsif ($res->code != 304) { # not modified
@@ -474,6 +509,10 @@ all files are allowed.
 sub file_allowed {
   my ($self, $file) = @_;
   return if $self->{exact_mirror};
+
+  # It's a cheap hack, but it gets the job done.
+  return 1 if $file eq File::Spec->catfile($self->{local}, 'RECENT');
+
   return (substr(File::Basename::basename($file), 0, 1) eq q{.}) ? 1 : 0;
 }
 

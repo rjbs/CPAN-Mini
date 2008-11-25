@@ -1,5 +1,9 @@
 Revision history for CPAN-Mini
 
+0.573     2008-11-25
+          switch to new File::Path API, do not suffer undef dirmodes
+          write a RECENT file of the files mirrored in the latest run
+
 0.572     2008-11-04
           add 'use File::HomeDir' to CPAN/Mini.pm (thanks DAGOLDEN)
           improve handling of trailing whitespace in config (thanks ANK)

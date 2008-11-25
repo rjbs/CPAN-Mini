@@ -72,7 +72,6 @@ sub run {
     local   => $config{local},
     trace   => (not $config{quiet}),
     force   => $config{force},
-    dirmode => $config{dirmode},
     offline => $config{offline},
     also_mirror    => $config{also_mirror},
     exact_mirror   => $config{exact_mirror},
@@ -80,7 +79,8 @@ sub run {
     path_filters   => $config{path_filters},
     skip_cleanup   => $config{skip_cleanup},
     skip_perl      => (not $config{perl}),
-    (defined $config{errors} ? (errors  => $config{errors}) : ()),
+    (defined $config{dirmode} ? (dirmode => $config{dirmode}) : ()),
+    (defined $config{errors}  ? (errors  => $config{errors})  : ()),
   );
 }
 

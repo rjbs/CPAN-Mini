@@ -1,5 +1,8 @@
 Revision history for CPAN-Mini
 
+0.575     2009-01-12
+          add no_conn_cache argument
+
 0.574     2008-11-26
           fix broken prereq declaration in Makefile.PL
 

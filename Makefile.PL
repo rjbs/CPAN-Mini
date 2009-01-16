@@ -20,4 +20,7 @@ extra_tests;
 
 install_script('bin/minicpan');
 
+repository('http://github.com/rjbs/cpan-mini');
+auto_manifest;
+
 WriteAll();

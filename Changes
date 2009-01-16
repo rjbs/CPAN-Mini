@@ -1,5 +1,8 @@
 Revision history for CPAN-Mini
 
+0.576     2009-01-16
+          add repo to metadata
+
 0.575     2009-01-12
           add no_conn_cache argument
 

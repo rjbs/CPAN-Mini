@@ -1,0 +1,228 @@
+#!/usr/bin/perl
+
+# Copyright (c) 2005 Nik Clayton
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+use Pod::Usage;
+use File::Basename;
+
+use File::Find;
+use File::Path;
+
+use CPAN::DistnameInfo;
+
+=head1 NAME
+
+minicpan-symlinks - Create symlinks in a minicpan mirror
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+
+=head1 SYNOPSIS
+
+  minicpan-symlinks [-cv] -l LOCAL
+  minicpan-symlinks -h
+
+=head1 DESCRIPTION
+
+C<minicpan-symlinks> recreates important symlinks within a CPAN mirror
+created by C<minicpan>.
+
+Specifically, C<minicpan> mirrors the CPAN index files and latest
+modules on a per-author basis, populating an
+F<authors/id/A/AU/AUTHOR/...> hierarchy.  This is sufficient to
+install modules through CPAN shells such as C<CPAN.pm> or
+C<CPANPLUS.pm>.
+
+However, other frontends, notably, the FreeBSD ports collection,
+expect to find the modules in a hierarchy that starts
+F<modules/by-module/tln/> (where F<tln> is the module's top level
+namespace, such as C<DBI> or C<Net>).
+
+C<minicpan-symlinks> creates the F<modules/by-module> hierarchy, and
+populates it with symlinks that point back to the appropriate files in
+the F<authors/id> hierarchy.
+
+=head1 OPTIONS
+
+=over 4
+
+=item -l LOCAL
+
+The path to the local CPAN mirror.  The same value given to the C<-l>
+parameter when you ran C<minicpan>.
+
+=item -c
+
+Recursively remove the F<by-module> directory created by previous runs.
+
+=item -v
+
+Be verbose.  May be given multiple times to increase verbosity.
+
+=item -h
+
+Display help.
+
+=back
+
+=cut
+
+my %opts = (root    => undef,
+	    clean   => 0,
+	    verbose => 0,
+	    help    => 0);
+
+GetOptions('l=s' => \$opts{root},
+	   'c'   => \$opts{clean},
+	   'v+'  => \$opts{verbose},
+	   'h'   => \$opts{help});
+
+pod2usage(-verbose => 1) if $opts{help};
+pod2usage(-verbose => 1) if ! defined $opts{root};
+
+$| = 1;
+
+my $APP = basename($0);
+
+die "$APP: '$opts{root}' does not exist.\n" unless -e $opts{root};
+
+my $MODULE_DIR = "$opts{root}/modules/by-module";
+
+if($opts{clean}) {
+  verbose(1, "$APP: cleaning '$MODULE_DIR'... ");
+  rmtree([$MODULE_DIR], $opts{verbose} > 1, 0);
+  verbose(1, "done.\n");
+}
+
+my %DISTS = ();
+my %SYMLINKS = ();
+
+verbose(1, "$APP: Walking '$opts{root}'... ");
+find(\&wanted, $opts{root});
+verbose(1, "done, ", scalar(keys %DISTS), " distributions found.\n");
+
+# For each   distribution that we found  we  create two symlinks.  The
+# first is  to  the distribution  file  itself.  The second is  to the
+# author's directory.   Both of  these symlinks  will be  created in a
+# directory named after the distributions top level namespace (TLN).
+#
+# Symlinks are stored in %SYMLINKS, keyed on the TLN.  Each entry is
+# another hash, where the key is the link that should be created under
+# the TLN, and the value is the link target.
+foreach my $distname (sort keys %DISTS) {
+  my $tln;
+  if($distname =~ /-/) {
+    ($tln) = $distname =~ /^(.*?)-/;
+  } else {
+    $tln = $distname;
+  }
+  my $author_dir = dirname($DISTS{$distname}{pathname});
+
+  $SYMLINKS{$tln}{$DISTS{$distname}{filename}} = $DISTS{$distname}{pathname};
+  $SYMLINKS{$tln}{$DISTS{$distname}{cpanid}} = $author_dir;
+}
+
+# Iterate over each symlink, creating the TLN directory as necessary.
+# Then iterate over all the symlinks in this TLN and create them.
+foreach my $s (sort keys %SYMLINKS) {
+  verbose(1, "$APP: Processing namespace $s... ");
+  mkpath "$MODULE_DIR/$s" unless -d "$MODULE_DIR/$s";
+  verbose(2, "\n");
+  foreach my $link (sort keys %{$SYMLINKS{$s}}) {
+    verbose(2, "$APP: Linking $s/$link -> $SYMLINKS{$s}{$link}\n");
+    symlink($SYMLINKS{$s}{$link}, "$MODULE_DIR/$s/$link");
+  }
+  verbose(1, "done.\n");
+}
+
+exit;
+
+# Walk the filesystem, ignoring non-files, and files that don't have a
+# '-' in their name.
+#
+# Use the filename to find the name of the distribution, use this as
+# the key in %DISTS.  The value is a ref to the hash of the
+# distribution's properties.
+sub wanted {
+  return unless -f $File::Find::name;
+  return unless $_ =~ /-/;
+
+  my $d = CPAN::DistnameInfo->new($File::Find::name);
+
+  $DISTS{$d->dist()} = { $d->properties() };
+}
+
+sub verbose {
+  my($level, @msg) = @_;
+  if($level <= $opts{verbose}) {
+    print @msg;
+  }
+}
+
+=head1 AUTHOR
+
+Nik Clayton, <nikc@cpan.org>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to <nikc@cpan.org>.
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (c) 2005 Nik Clayton
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+
+=cut

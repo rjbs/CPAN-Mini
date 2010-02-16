@@ -1,8 +1,2 @@
-META.yml
-Makefile
-cover_db
-blib
-inc
-pm_to_blib
-MANIFEST*
-!MANIFEST.SKIP
+CPAN-Mini-*
+.build

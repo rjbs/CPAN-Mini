@@ -1,12 +1,7 @@
-
 use strict;
 use warnings;
-
 package CPAN::Mini::App;
-
-=head1 NAME
-
-CPAN::Mini::App - the guts of the minicpan command
+# ABSTRACT: the guts of the minicpan command
 
 =head1 SYNOPSIS
 
@@ -20,7 +15,7 @@ use CPAN::Mini;
 use File::HomeDir;
 use File::Spec;
 use Getopt::Long qw(GetOptions);
-use Pod::Usage;
+use Pod::Usage 1.00;
 
 sub _display_version {
   my $class = shift;
@@ -31,7 +26,7 @@ sub _display_version {
   exit;
 }
 
-=head2 run
+=method run
 
 This method is called by F<minicpan> to do all the work.  Don't rely on what it
 does just yet.
@@ -89,14 +84,6 @@ sub run {
 Randal Schwartz's original article, which can be found here:
 
   http://www.stonehenge.com/merlyn/LinuxMag/col42.html
-
-=head1 AUTHORS
-
-Randal Schwartz <F<merlyn@stonehenge.com>>
-
-Ricardo SIGNES <F<rjbs@cpan.org>>
-
-Copyright 2004, released under the same terms as Perl itself.
 
 =cut
 

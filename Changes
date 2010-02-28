@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.100591  2010-02-28 15:11:03 America/New_York
           add an option to skip source code control files (thanks, brian d foy)
 
 1.100590  2009-02-28

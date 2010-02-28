@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          fix insanely stupid typo; need more tests!
 
 1.100591  2010-02-28 15:11:03 America/New_York
           add an option to skip source code control files (thanks, brian d foy)

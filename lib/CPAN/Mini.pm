@@ -1,7 +1,9 @@
 use 5.006;
 use strict;
 use warnings;
+
 package CPAN::Mini;
+
 # ABSTRACT: create a minimal mirror of CPAN
 
 ## no critic RequireCarping
@@ -36,14 +38,14 @@ the newest version of every distribution.  Those files are:
 use Carp ();
 
 use File::Basename ();
-use File::Copy ();
-use File::HomeDir 0.57 (); # Win32 support
+use File::Copy     ();
+use File::HomeDir 0.57 ();  # Win32 support
 use File::Find ();
-use File::Path 2.04 (); # new API, bugfixes
+use File::Path 2.04 ();     # new API, bugfixes
 use File::Spec ();
 use File::Temp ();
 
-use URI 1 ();
+use URI 1            ();
 use LWP::UserAgent 5 ();
 
 use Compress::Zlib 1.20 ();
@@ -149,10 +151,10 @@ sub update_mirror {
   $self = $self->new(@_) unless ref $self;
 
   unless ($self->{offline}) {
-    $self->trace( "Updating $self->{local}\n" );
-    $self->trace( "Mirroring from $self->{remote}\n" );
-    $self->trace( "=" x 63 . "\n" );
-    
+    $self->trace("Updating $self->{local}\n");
+    $self->trace("Mirroring from $self->{remote}\n");
+    $self->trace("=" x 63 . "\n");
+
     # mirrored tracks the already done, keyed by filename
     # 1 = local-checked, 2 = remote-mirrored
     $self->mirror_indices;
@@ -176,7 +178,7 @@ sub update_mirror {
   return $self->{changes_made};
 }
 
-sub _recent { $_[0]->{recent}{$_[1]} = 1 };
+sub _recent { $_[0]->{recent}{ $_[1] } = 1 }
 
 sub _write_out_recent {
   my ($self) = @_;
@@ -279,8 +281,8 @@ sub new {
   $version = 'v?' unless defined $version;
 
   $self->{__lwp} = LWP::UserAgent->new(
-    agent      => "$class/$version",
-    env_proxy  => 1,
+    agent     => "$class/$version",
+    env_proxy => 1,
     ($self->{no_conn_cache} ? () : (keep_alive => 5)),
   );
 
@@ -359,10 +361,8 @@ sub _install_indices {
 
     unlink $local_file;
 
-    File::Copy::copy(
-      File::Spec->catfile($self->{scratch}, split m{/}, $file),
-      $local_file,
-    );
+    File::Copy::copy(File::Spec->catfile($self->{scratch}, split m{/}, $file),
+      $local_file,);
 
     $self->{mirrored}{$local_file} = 1;
   }
@@ -383,10 +383,9 @@ sub mirror_file {
   $arg ||= {};
 
   # full URL
-  my $remote_uri
-    = eval { $path->isa('URI') }
-    ? $path
-    : URI->new_abs($path, $self->{remote})->as_string;
+  my $remote_uri = eval { $path->isa('URI') }
+                 ? $path
+                 : URI->new_abs($path, $self->{remote})->as_string;
 
   # native absolute file
   my $local_file = File::Spec->catfile(
@@ -420,16 +419,19 @@ sub mirror_file {
       $self->_recent($path);
       $self->trace(" ... updated\n");
       $self->{changes_made}++;
-    } elsif ($res->code != 304) { # not modified
-      warn(($self->{trace} ? "\n" : q{}) . "$remote_uri: " . $res->status_line .  "\n")
-        if $self->{errors};
+    } elsif ($res->code != 304) {  # not modified
+      warn(
+        ($self->{trace} ? "\n" : q{})
+        . "$remote_uri: "
+        . $res->status_line . "\n"
+      ) if $self->{errors};
       return;
     } else {
       $self->trace(" ... up to date\n");
     }
   }
 
-  if ($path =~ m{^authors/id}) {  # maybe fetch CHECKSUMS
+  if ($path =~ m{^authors/id}) {   # maybe fetch CHECKSUMS
     my $checksum_path
       = URI->new_abs("CHECKSUMS", $remote_uri)->rel($self->{remote})->as_string;
 
@@ -460,11 +462,13 @@ filtered (to be skipped).  Returns 0 if the distribution is to not filtered
 sub __do_filter {
   my ($self, $filter, $file) = @_;
   return unless $filter;
+
   if (ref($filter) eq 'ARRAY') {
     for (@$filter) {
       return 1 if $self->__do_filter($_, $file);
     }
   }
+
   if (ref($filter) eq 'CODE') {
     return $filter->($file);
   } else {
@@ -596,8 +600,8 @@ sub __homedir {
 sub __homedir_configfile {
   my ($class) = @_;
   my $default = File::Spec->catfile($class->__homedir, '.minicpanrc');
-  }
-  
+}
+
 sub __default_configfile {
   my ($self) = @_;
 
@@ -608,9 +612,9 @@ sub __default_configfile {
 sub read_config {
   my ($class, $options) = @_;
 
-  my $config_file = $class->config_file( $options );
-  $class->trace( "Using config from $config_file\n" );
-  
+  my $config_file = $class->config_file($options);
+  $class->trace("Using config from $config_file\n");
+
   open my $config_fh, '<', $config_file
     or die "couldn't open config file $config_file: $!";
 
@@ -648,63 +652,55 @@ OPTIONS is an optional hash reference of the C<CPAN::Mini> config hash.
 
 sub config_file {
   my ($class, $options) = @_;
-  	
+
   my $config_file = do {
-    if( defined eval { $options->{config_file} } ) {
-  	  $options->{config_file};
-	  }
-    elsif( defined $ENV{CPAN_MINI_CONFIG} ) {
-	  $ENV{CPAN_MINI_CONFIG};
-	  }
-	elsif( defined $class->__homedir_configfile ) {
-	  $class->__homedir_configfile;
-	  }
-	elsif( defined $class->__default_configfile ) {
-	  $class->__default_configfile;
-      }
-    else {
-      ()
-      }
-    };
-     
-  return(
-   (defined $config_file && -e $config_file)
-     ? 
-   $config_file 
-     : 
-   ()
-   );
-  }
+    if (defined eval { $options->{config_file} }) {
+      $options->{config_file};
+    } elsif (defined $ENV{CPAN_MINI_CONFIG}) {
+      $ENV{CPAN_MINI_CONFIG};
+    } elsif (defined $class->__homedir_configfile) {
+      $class->__homedir_configfile;
+    } elsif (defined $class->__default_configfile) {
+      $class->__default_configfile;
+    } else {
+      ();
+    }
+  };
+
+  return (
+    (defined $config_file && -e $config_file)
+    ? $config_file
+    : ()
+  );
+}
 
 sub __default_fh { *STDOUT{IO} }
 
 # stolen from IO::Interactive
 local (*DEV_NULL, *DEV_NULL2);
 my $dev_null;
+
 BEGIN {
-    pipe *DEV_NULL, *DEV_NULL2
-        or die "Internal error: can't create null filehandle";
-    $dev_null = \*DEV_NULL;
+  pipe *DEV_NULL, *DEV_NULL2
+    or die "Internal error: can't create null filehandle";
+  $dev_null = \*DEV_NULL;
 }
 
 sub __quiet_fh { $dev_null }
-  
+
 sub _trace_fh {
   my ($either) = @_;
-  
-  return do {
-    if( ref $either and defined $either->{trace} and ! $either->{trace} ) {
-      $either->__quiet_fh;
-      }
-    elsif( eval { $either->can( '_default_fh' ) } ) {
-      $either->__default_fh;
-      }
-    else {
-      __default_fh();
-      }
-    };
 
-  }
+  return do {
+    if (ref $either and defined $either->{trace} and !$either->{trace}) {
+      $either->__quiet_fh;
+    } elsif (eval { $either->can('_default_fh'); }) {
+      $either->__default_fh;
+    } else {
+      __default_fh();
+    }
+  };
+}
 
 =head1 SEE ALSO
 

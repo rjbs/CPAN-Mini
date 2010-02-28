@@ -1,6 +1,8 @@
 use strict;
 use warnings;
+
 package CPAN::Mini::App;
+
 # ABSTRACT: the guts of the minicpan command
 
 =head1 SYNOPSIS
@@ -53,12 +55,12 @@ sub run {
     "x+"          => \$commandline{exact_mirror},
   ) or pod2usage(2);
 
-  my %config = CPAN::Mini->read_config( \%commandline );
+  my %config = CPAN::Mini->read_config(\%commandline);
   $config{class} ||= 'CPAN::Mini';
 
-  foreach my $key ( keys %commandline ) {
+  foreach my $key (keys %commandline) {
     $config{$key} = $commandline{$key} if defined $commandline{$key};
-    }
+  }
 
   eval "require $config{class}";
   die $@ if $@;

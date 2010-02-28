@@ -14,7 +14,7 @@ package CPAN::Mini::App;
 use CPAN::Mini;
 use File::HomeDir;
 use File::Spec;
-use Getopt::Long qw(GetOptions);
+use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage 1.00;
 
 sub _display_version {

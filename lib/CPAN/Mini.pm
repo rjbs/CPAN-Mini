@@ -271,8 +271,11 @@ sub new {
 
   $self->{remote} = "$self->{remote}/" if substr($self->{remote}, -1) ne '/';
 
+  my $version = $class->VERSION;
+  $version = 'v?' unless defined $version;
+
   $self->{__lwp} = LWP::UserAgent->new(
-    agent      => "$class/" . $class->VERSION,
+    agent      => "$class/$version",
     env_proxy  => 1,
     ($self->{no_conn_cache} ? () : (keep_alive => 5)),
   );

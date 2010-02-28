@@ -23,6 +23,7 @@ minicpan - uses CPAN::Mini to create or update a local mirror
    -q         - run in quiet mode (don't print status)
    -qq        - run in silent mode (don't even print warnings)
    -c CLASS   - what class to use to mirror (default: CPAN::Mini)
+   -s FILE    - what config file to use (default: ~/.minicpanrc)
    -h         - print help and exit
    -v         - print version and exit
    -x         - build an exact mirror, getting even normally disallowed files
@@ -35,13 +36,32 @@ described in CPAN::Mini.
 
 =head1 CONFIGURATION FILE
 
-C<minicpan> will read the file C<~/.minicpanrc> to get configuration
+By default, C<minicpan> will read a configuration file to get configuration
 information.  The file is a simple set of names and values, as in the following
 example:
 
  local:  /home/rjbs/mirrors/minicpan/
  remote: http://your.favorite.cpan/cpan/
  exact_mirror: 1
+ 
+C<minicpan> tries to find a configuration file through the following process.
+It takes the first defined it finds:
+
+=over 4
+
+=item * Use the value specified by C<-s> on the command line
+
+=item * Use the value in the C<CPAN_MINI_CONFIG> environment variable
+
+=item * Use F<~/.minicpanrc>
+
+=item * Use F<CPAN/Mini/minicpan.conf>
+
+=back
+
+If the selected file does not exist, C<minicpan> does not keep looking.
+
+You can override this process with a C<config_file> method in your subclass.
 
 =head1 TO DO
 

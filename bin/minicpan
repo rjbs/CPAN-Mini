@@ -63,6 +63,8 @@ If the selected file does not exist, C<minicpan> does not keep looking.
 
 You can override this process with a C<config_file> method in your subclass.
 
+See C<CPAN::Mini> for a full listing of available options.
+
 =head1 TO DO
 
 Improve command-line options.

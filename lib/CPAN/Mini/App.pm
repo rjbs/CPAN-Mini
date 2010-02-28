@@ -83,6 +83,7 @@ sub run {
     path_filters   => $config{path_filters},
     skip_cleanup   => $config{skip_cleanup},
     skip_perl      => (not $config{perl}),
+    ignore_source_control => $config{ignore_source_control}
     (defined $config{dirmode} ? (dirmode => $config{dirmode}) : ()),
     (defined $config{errors}  ? (errors  => $config{errors})  : ()),
   );

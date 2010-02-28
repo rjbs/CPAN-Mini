@@ -550,7 +550,7 @@ sub clean_unmirrored {
 
   File::Find::find sub {
     my $file = File::Spec->canonpath($File::Find::name);  ## no critic Package
-    my $basename = basename( $file );
+    my $basename = File::Basename::basename( $file );
 
     if (
       $self->{ignore_source_control}

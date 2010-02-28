@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          fix a previously unreached bit of code re: basename
 
 1.100592  2010-02-28 15:15:36 America/New_York
           fix insanely stupid typo; need more tests!

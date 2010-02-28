@@ -41,7 +41,7 @@ sub run {
   my %commandline;
   GetOptions(
     "c|class=s"   => \$commandline{class},
-    "s|config=s"  => \$commandline{config_file},
+    "C|config=s"  => \$commandline{config_file},
     "h|help"      => sub { pod2usage(1); },
     "v|version"   => sub { $version = 1 },
     "l|local=s"   => \$commandline{local},

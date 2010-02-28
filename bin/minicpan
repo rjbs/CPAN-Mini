@@ -23,7 +23,7 @@ minicpan - uses CPAN::Mini to create or update a local mirror
    -q         - run in quiet mode (don't print status)
    -qq        - run in silent mode (don't even print warnings)
    -c CLASS   - what class to use to mirror (default: CPAN::Mini)
-   -s FILE    - what config file to use (default: ~/.minicpanrc)
+   -C FILE    - what config file to use (default: ~/.minicpanrc)
    -h         - print help and exit
    -v         - print version and exit
    -x         - build an exact mirror, getting even normally disallowed files
@@ -49,7 +49,7 @@ It takes the first defined it finds:
 
 =over 4
 
-=item * Use the value specified by C<-s> on the command line
+=item * Use the value specified by C<-C> on the command line
 
 =item * Use the value in the C<CPAN_MINI_CONFIG> environment variable
 

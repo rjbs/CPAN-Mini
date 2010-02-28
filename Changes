@@ -1,5 +1,14 @@
 Revision history for CPAN-Mini
 
+{{$NEXT}}
+          add an option to skip source code control files (thanks, brian d foy)
+
+1.100590  2009-02-28
+          add -C switch to allow alternate config file (thanks, brian d foy)
+          getopt switches are now correctly case-sensitive (thanks, brian)
+          improve subclassability for config file and output (thanks, brian)
+          switch to Dist::Zilla for release management
+
 0.576     2009-01-16
           add repo to metadata
 

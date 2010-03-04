@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.100630  2010-03-04 07:57:34 America/New_York
           suppress "using config..." during setup with -qq
 
 1.100593  2010-02-28 16:58:34 America/New_York

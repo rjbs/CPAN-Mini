@@ -1,5 +1,8 @@
 Revision history for CPAN-Mini
 
+{{$NEXT}}
+          suppress "using config..." during setup with -qq
+
 1.100593  2010-02-28 16:58:34 America/New_York
           fix a previously unreached bit of code re: basename
 

@@ -95,7 +95,7 @@ on this run.
 * C<skip_perl>
 
 If true, CPAN::Mini will skip the major language distributions: perl, parrot,
-and ponie.
+and ponie.  It will also skip embperl, sybperl, bioperl, and kurila.
 
 * C<trace>
 

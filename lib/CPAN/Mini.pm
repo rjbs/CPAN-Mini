@@ -646,6 +646,8 @@ sub read_config {
 
   my $config_file = $class->config_file($options);
 
+  return if not defined $config_file;
+
   # This is ugly, but lets us respect -qq for now even before we have an
   # object.  I think a better fix is warranted. -- rjbs, 2010-03-04
   $class->trace("Using config from $config_file\n")

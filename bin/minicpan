@@ -27,6 +27,7 @@ minicpan - uses CPAN::Mini to create or update a local mirror
    -h         - print help and exit
    -v         - print version and exit
    -x         - build an exact mirror, getting even normally disallowed files
+   -t SEC     - timeout in sec. Defaults to 180 sec
    --offline  - operate in offline mode (generally: do nothing)
 
 =head1 DESCRIPTION

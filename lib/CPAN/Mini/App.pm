@@ -53,6 +53,7 @@ sub run {
     "f+"          => \$commandline{force},
     "p+"          => \$commandline{perl},
     "x+"          => \$commandline{exact_mirror},
+    "t|timeout=i" => \$commandline{timeout},
   ) or pod2usage(2);
 
   my %config = CPAN::Mini->read_config(\%commandline);
@@ -83,6 +84,7 @@ sub run {
     path_filters   => $config{path_filters},
     skip_cleanup   => $config{skip_cleanup},
     skip_perl      => (not $config{perl}),
+    timeout        => $config{timeout},
     ignore_source_control => $config{ignore_source_control},
     (defined $config{dirmode} ? (dirmode => $config{dirmode}) : ()),
     (defined $config{errors}  ? (errors  => $config{errors})  : ()),

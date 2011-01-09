@@ -289,6 +289,7 @@ sub new {
     agent     => "$class/$version",
     env_proxy => 1,
     ($self->{no_conn_cache} ? () : (keep_alive => 5)),
+    ($self->{timeout} ? (timeout => $self->{timeout}) : ()),
   );
 
   unless ($self->{offline}) {

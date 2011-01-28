@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          if the config file does not exist, do not die or spew warnings; this
+          fixes RT #57388
 
 1.100630  2010-03-04 07:57:34 America/New_York
           suppress "using config..." during setup with -qq

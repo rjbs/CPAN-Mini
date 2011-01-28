@@ -4,11 +4,10 @@ use warnings;
 use CPAN::Mini::App;
 CPAN::Mini::App->run;
 
+# PODNAME: minicpan
+# ABSTRACT: uses CPAN::Mini to create or update a local mirror
+
 __END__
-
-=head1 NAME
-
-minicpan - uses CPAN::Mini to create or update a local mirror
 
 =head1 SYNOPSIS
 
@@ -74,16 +73,5 @@ Improve command-line options.
 Randal Schwartz's original article, which can be found here:
 
   http://www.stonehenge.com/merlyn/LinuxMag/col42.html
-
-=head1 AUTHORS
-
-Randal Schwartz <F<merlyn@stonehenge.com>> had the bright idea and wrote the
-original implementation.
-
-Ricardo SIGNES <F<rjbs@cpan.org>> brazenly took the script, made a module and
-distribution, and slowly allowed it to gain features.
-
-This code was copyrighted in 2004, and is released under the same terms as Perl
-itself.
 
 =cut

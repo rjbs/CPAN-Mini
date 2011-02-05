@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.111     2011-02-05 15:13:17 America/New_York
           add --timeout (thanks, Gabor Szabo!)
 
 1.110     2011-01-27 21:48:34 America/New_York

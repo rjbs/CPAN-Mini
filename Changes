@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          add --timeout (thanks, Gabor Szabo!)
 
 1.110     2011-01-27 21:48:34 America/New_York
           if the config file does not exist, do not die or spew warnings; this

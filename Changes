@@ -2,6 +2,9 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+1.111001  2011-02-10 19:34:38 America/New_York
+          restore six-digit-mantissa versioning to help downstream packagers
+
 1.111     2011-02-05 15:13:17 America/New_York
           add --timeout (thanks, Gabor Szabo!)
 

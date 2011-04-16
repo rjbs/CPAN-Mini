@@ -293,8 +293,13 @@ sub new {
   );
 
   unless ($self->{offline}) {
+    my $test_uri = URI->new_abs(
+      'modules/02packages.details.txt.gz',
+      $self->{remote},
+    )->as_string;
+
     Carp::croak "unable to contact the remote mirror"
-      unless eval { $self->__lwp->head($self->{remote})->is_success };
+      unless eval { $self->__lwp->head($test_uri)->is_success };
   }
 
   return $self;

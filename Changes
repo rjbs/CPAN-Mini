@@ -2,6 +2,8 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+          test for online-ness by HEAD-ing 02packages, not the remote root
+
 1.111001  2011-02-10 19:34:38 America/New_York
           restore six-digit-mantissa versioning to help downstream packagers
 

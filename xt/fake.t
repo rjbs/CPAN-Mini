@@ -7,19 +7,25 @@ use File::Spec;
 use File::Temp qw(tempdir);
 use CPAN::Mini;
 
+use Test::More;
+
 my $tempdir = tempdir(CLEANUP => 1);
 
 CPAN::Mini->update_mirror(
   remote => "http://fakecpan.org/fake/minicpan/1.001/cpan",
   local  => $tempdir,
-  trace  => 1
+  trace  => 0,
 );
+
+pass("performed initial mirror");
 
 CPAN::Mini->update_mirror(
   remote => "http://fakecpan.org/fake/minicpan/1.002/cpan",
   local  => $tempdir,
-  trace  => 1
+  trace  => 0,
 );
+
+pass("performed mirror update");
 
 my @files = File::Find::Rule->file->in($tempdir);
 $_ = File::Spec->abs2rel($_, $tempdir) for @files;
@@ -42,3 +48,5 @@ is_deeply(
   [ sort @want  ],
   "we end up with just the files we expect",
 );
+
+done_testing;

@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          add tools for building a fake cpan and an xt test for testing online
 
 1.111002  2011-04-16 18:20:43 Europe/Amsterdam
 

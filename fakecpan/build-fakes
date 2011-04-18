@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+use 5.12.0;
+
+use CPAN::Faker;
+use Module::Faker 0.008;
+
+my $CURRENT_SCHEMA = 1;
+my $ROOT = 'fakecpan';
+
+for my $dir (grep { -d and m{\A$ROOT/[0-9]+\z} } <$ROOT/*>) {
+  my ($dir_num) = $dir =~ m{/([0-9]+)\z};
+  my $v = sprintf '%u.%03u', $CURRENT_SCHEMA, $dir_num;
+  say "building $v from $dir";
+
+  system("cpanfaker -s $dir -d $ROOT/build/$v/cpan");
+}

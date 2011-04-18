@@ -13,4 +13,5 @@ for my $dir (grep { -d and m{\A$ROOT/[0-9]+\z} } <$ROOT/*>) {
   say "building $v from $dir";
 
   system("cpanfaker -s $dir -d $ROOT/build/$v/cpan");
+  system("cp -v $ROOT/*.txt $ROOT/build/$v");
 }

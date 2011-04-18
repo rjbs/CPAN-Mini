@@ -1,0 +1,4 @@
+
+This set of fakes is used for testing CPAN::Mini, and will change subject to
+the whims of its author.
+

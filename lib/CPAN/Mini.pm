@@ -13,13 +13,13 @@ package CPAN::Mini;
 (If you're not going to do something weird, you probably want to look at the
 L<minicpan> command, instead.)
 
- use CPAN::Mini;
+  use CPAN::Mini;
 
- CPAN::Mini->update_mirror(
-   remote => "http://cpan.mirrors.comintern.su",
-   local  => "/usr/share/mirrors/cpan",
-   trace  => 1
- );
+  CPAN::Mini->update_mirror(
+    remote => "http://cpan.mirrors.comintern.su",
+    local  => "/usr/share/mirrors/cpan",
+    trace  => 1
+  );
 
 =head1 DESCRIPTION
 

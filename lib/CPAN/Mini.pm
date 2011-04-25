@@ -682,7 +682,7 @@ sub read_config {
   # This is ugly, but lets us respect -qq for now even before we have an
   # object.  I think a better fix is warranted. -- rjbs, 2010-03-04
   $class->log("Using config from $config_file")
-    if $options->{log_level} =~ /\A(?:warn|fatal)\z/;
+    if ($options->{log_level}||'info') =~ /\A(?:warn|fatal)\z/;
 
   return unless -e $config_file;
 

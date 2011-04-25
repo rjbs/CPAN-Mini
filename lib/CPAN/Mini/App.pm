@@ -44,6 +44,14 @@ sub _validate_log_level {
 sub run {
   my ($class) = @_;
 
+  my $minicpan = $class->initialize_minicpan;
+
+  $minicpan->update_mirror;
+}
+
+sub initialize_minicpan {
+  my ($class) = @_;
+
   my $version;
 
   my %commandline;
@@ -108,7 +116,7 @@ sub run {
   $|++;
   $config{dirmode} &&= oct($config{dirmode});
 
-  $config{class}->update_mirror(
+  return $config{class}->new(
     remote         => $config{remote},
     local          => $config{local},
     force          => $config{force},

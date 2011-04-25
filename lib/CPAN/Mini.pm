@@ -433,14 +433,11 @@ sub mirror_file {
       $self->log_debug(" ... updated");
       $self->{changes_made}++;
     } elsif ($res->code != 304) {  # not modified
-      $self->log(
-        ($self->{trace} ? "\n" : q{})
-        . "$remote_uri: "
-        . $res->status_line . "\n"
-      ) if $self->{errors};
+      $self->log(" ... resulted in an HTTP error with status " . $res->code);
+      $self->log_warn("$remote_uri: " . $res->status_line);
       return;
     } else {
-      $self->log(" ... up to date\n");
+      $self->log_debug(" ... up to date\n");
     }
   }
 
@@ -589,7 +586,7 @@ sub clean_file {
   my ($self, $file) = @_;
 
   unless (unlink $file) {
-    $self->log_error("$file cannot be removed: $!");
+    $self->log_warn("$file cannot be removed: $!");
     return;
   }
 
@@ -600,15 +597,16 @@ sub clean_file {
 
 =method log_warn
 
-=method log_info
+=method log
 
 =method log_debug
 
-  $minicpan->log_info($message);
+  $minicpan->log($message);
 
 This will log (print) the given message unless the log level is too loo.
 
-C<log_info> may also be called as C<trace> for backward compatibility reasons.
+C<log>, which logs at the I<info> level, may also be called as C<trace> for
+backward compatibility reasons.
 
 =cut
 
@@ -617,19 +615,19 @@ sub log_level {
   return 'info';
 }
 
-sub log {
+sub log_unconditionally {
   my ($self, $message) = @_;
   print "$message\n";
 }
 
 sub log_warn {
   return if $_[0]->log_level eq 'fatal';
-  $_[0]->log($_[1]);
+  $_[0]->log_unconditionally($_[1]);
 }
 
-sub log_info {
+sub log {
   return unless $_[0]->log_level =~ /\A(?:info|debug)\z/;
-  $_[0]->log($_[1]);
+  $_[0]->log_unconditionally($_[1]);
 }
 
 sub trace { my $self = shift; $self->log_info(@_); }
@@ -637,7 +635,7 @@ sub trace { my $self = shift; $self->log_info(@_); }
 sub log_debug {
   my ($self, @rest) = @_;
   return unless $_[0]->log_level eq 'debug';
-  $_[0]->log($_[1]);
+  $_[0]->log_unconditionally($_[1]);
 }
 
 =method read_config

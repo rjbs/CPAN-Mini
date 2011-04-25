@@ -156,9 +156,9 @@ sub update_mirror {
   $self = $self->new(@_) unless ref $self;
 
   unless ($self->{offline}) {
-    $self->trace("Updating $self->{local}\n");
-    $self->trace("Mirroring from $self->{remote}\n");
-    $self->trace("=" x 63 . "\n");
+    $self->log("Updating $self->{local}");
+    $self->log("Mirroring from $self->{remote}");
+    $self->log("=" x 63);
 
     # mirrored tracks the already done, keyed by filename
     # 1 = local-checked, 2 = remote-mirrored
@@ -193,7 +193,7 @@ sub _write_out_recent {
   open my $recent_fh, '>', $recent or die "can't open $recent for writing: $!";
 
   for my $file (sort keys %{ $self->{recent} }) {
-    print $recent_fh "$file\n" or die "can't write to $recent: $!";
+    print {$recent_fh} "$file\n" or die "can't write to $recent: $!";
   }
 
   die "error closing $recent: $!" unless close $recent_fh;
@@ -301,6 +301,8 @@ sub new {
     Carp::croak "unable to contact the remote mirror"
       unless eval { $self->__lwp->head($test_uri)->is_success };
   }
+
+  $self->{log_level} ||= 'info';
 
   return $self;
 }
@@ -421,24 +423,24 @@ sub mirror_file {
       },
     );
 
-    $self->trace($path);
+    $self->log($path);
     my $res = $self->{__lwp}->mirror($remote_uri, $local_file);
 
     if ($res->is_success) {
       utime undef, undef, $local_file if $arg->{update_times};
       $checksum_might_be_up_to_date = 0;
       $self->_recent($path);
-      $self->trace(" ... updated\n");
+      $self->log_debug(" ... updated");
       $self->{changes_made}++;
     } elsif ($res->code != 304) {  # not modified
-      warn(
+      $self->log(
         ($self->{trace} ? "\n" : q{})
         . "$remote_uri: "
         . $res->status_line . "\n"
       ) if $self->{errors};
       return;
     } else {
-      $self->trace(" ... up to date\n");
+      $self->log(" ... up to date\n");
     }
   }
 
@@ -568,13 +570,8 @@ sub clean_unmirrored {
 
     return unless (-f $file and not $self->{mirrored}{$file});
     return if $self->file_allowed($file);
-    $self->trace("cleaning $file ...");
 
-    if ($self->clean_file($file)) {
-      $self->trace("done\n");
-    } else {
-      $self->trace("couldn't be cleaned\n");
-    }
+    $self->clean_file($file);
 
   }, $self->{local};
 }
@@ -592,30 +589,60 @@ sub clean_file {
   my ($self, $file) = @_;
 
   unless (unlink $file) {
-    warn "$file ... cannot be removed: $!\n" if $self->{errors};
+    $self->log_error("$file cannot be removed: $!");
     return;
   }
+
+  $self->log("$file removed");
 
   return 1;
 }
 
-=method trace
+=method log_warn
 
-  $minicpan->trace($message);
+=method log_info
 
-If the object is mirroring verbosely, this method will print messages sent to
-it.
+=method log_debug
+
+  $minicpan->log_info($message);
+
+This will log (print) the given message unless the log level is too loo.
+
+C<log_info> may also be called as C<trace> for backward compatibility reasons.
 
 =cut
 
-sub trace {
+sub log_level {
+  return $_[0]->{log_level} if ref $_[0];
+  return 'info';
+}
+
+sub log {
   my ($self, $message) = @_;
-  print { $self->_trace_fh } $message;
+  print "$message\n";
+}
+
+sub log_warn {
+  return if $_[0]->log_level eq 'fatal';
+  $_[0]->log($_[1]);
+}
+
+sub log_info {
+  return unless $_[0]->log_level =~ /\A(?:info|debug)\z/;
+  $_[0]->log($_[1]);
+}
+
+sub trace { my $self = shift; $self->log_info(@_); }
+
+sub log_debug {
+  my ($self, @rest) = @_;
+  return unless $_[0]->log_level eq 'debug';
+  $_[0]->log($_[1]);
 }
 
 =method read_config
 
-  my %config = CPAN::Mini->read_config;
+  my %config = CPAN::Mini->read_config(\%options);
 
 This routine returns a set of arguments that can be passed to CPAN::Mini's
 C<new> or C<update_mirror> methods.  It will look for a file called
@@ -656,8 +683,8 @@ sub read_config {
 
   # This is ugly, but lets us respect -qq for now even before we have an
   # object.  I think a better fix is warranted. -- rjbs, 2010-03-04
-  $class->trace("Using config from $config_file\n")
-    unless $options->{quiet};
+  $class->log("Using config from $config_file")
+    if $options->{log_level} =~ /\A(?:warn|fatal)\z/;
 
   return unless -e $config_file;
 
@@ -718,34 +745,6 @@ sub config_file {
     ? $config_file
     : ()
   );
-}
-
-sub __default_fh { *STDOUT{IO} }
-
-# stolen from IO::Interactive
-local (*DEV_NULL, *DEV_NULL2);
-my $dev_null;
-
-BEGIN {
-  pipe *DEV_NULL, *DEV_NULL2
-    or die "Internal error: can't create null filehandle";
-  $dev_null = \*DEV_NULL;
-}
-
-sub __quiet_fh { $dev_null }
-
-sub _trace_fh {
-  my ($either) = @_;
-
-  return do {
-    if (ref $either and defined $either->{trace} and !$either->{trace}) {
-      $either->__quiet_fh;
-    } elsif (eval { $either->can('_default_fh'); }) {
-      $either->__default_fh;
-    } else {
-      __default_fh();
-    }
-  };
 }
 
 =head1 SEE ALSO

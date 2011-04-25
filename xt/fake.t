@@ -14,7 +14,7 @@ my $tempdir = tempdir(CLEANUP => 1);
 CPAN::Mini->update_mirror(
   remote => "http://fakecpan.org/fake/minicpan/1.001/cpan",
   local  => $tempdir,
-  trace  => 0,
+  trace  => 1,
 );
 
 pass("performed initial mirror");

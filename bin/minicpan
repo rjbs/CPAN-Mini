@@ -19,6 +19,7 @@ __END__
    -d 0###    - permissions (numeric) to use when creating directories
    -f         - check all directories, even if indices are unchanged
    -p         - mirror perl, ponie, and parrot distributions
+   --debug    - run in debug mode (print even banal messages)
    -q         - run in quiet mode (don't print status)
    -qq        - run in silent mode (don't even print warnings)
    -c CLASS   - what class to use to mirror (default: CPAN::Mini)

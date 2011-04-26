@@ -440,21 +440,21 @@ sub mirror_file {
       },
     );
 
-    $self->log($path);
+    $self->log($path, { no_nl => 1 });
     my $res = $self->{__lwp}->mirror($remote_uri, $local_file);
 
     if ($res->is_success) {
       utime undef, undef, $local_file if $arg->{update_times};
       $checksum_might_be_up_to_date = 0;
       $self->_recent($path);
-      $self->log_debug(" ... updated");
+      $self->log(" ... updated");
       $self->{changes_made}++;
     } elsif ($res->code != 304) {  # not modified
       $self->log(" ... resulted in an HTTP error with status " . $res->code);
       $self->log_warn("$remote_uri: " . $res->status_line);
       return;
     } else {
-      $self->log_debug(" ... up to date\n");
+      $self->log(" ... up to date");
     }
   }
 
@@ -633,18 +633,20 @@ sub log_level {
 }
 
 sub log_unconditionally {
-  my ($self, $message) = @_;
-  print "$message\n";
+  my ($self, $message, $arg) = @_;
+  $arg ||= {};
+
+  print($message, $arg->{no_nl} ? () : "\n");
 }
 
 sub log_warn {
   return if $_[0]->log_level eq 'fatal';
-  $_[0]->log_unconditionally($_[1]);
+  $_[0]->log_unconditionally($_[1], $_[2]);
 }
 
 sub log {
   return unless $_[0]->log_level =~ /\A(?:info|debug)\z/;
-  $_[0]->log_unconditionally($_[1]);
+  $_[0]->log_unconditionally($_[1], $_[2]);
 }
 
 sub trace { my $self = shift; $self->log_info(@_); }
@@ -652,7 +654,7 @@ sub trace { my $self = shift; $self->log_info(@_); }
 sub log_debug {
   my ($self, @rest) = @_;
   return unless $_[0]->log_level eq 'debug';
-  $_[0]->log_unconditionally($_[1]);
+  $_[0]->log_unconditionally($_[1], $_[2]);
 }
 
 =method read_config

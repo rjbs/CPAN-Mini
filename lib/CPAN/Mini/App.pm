@@ -93,17 +93,22 @@ sub initialize_minicpan {
              : $quiet == 1 ? 'warn'
              : $quiet >= 2 ? 'fatal'
              : $log_level  ? $log_level
-             :               'info';
+             :               undef;
 
-  $class->_validate_log_level($log_level);
+  $class->_validate_log_level($log_level) if defined $log_level;
 
-  my %config = CPAN::Mini->read_config(\%commandline);
-  $config{log_level} = $log_level;
+  my %config = CPAN::Mini->read_config({
+    log_level => 'info',
+    %commandline
+  });
+
   $config{class} ||= 'CPAN::Mini';
 
   foreach my $key (keys %commandline) {
     $config{$key} = $commandline{$key} if defined $commandline{$key};
   }
+
+  $config{log_level} = $log_level || $config{log_level} || 'info';
 
   $class->_validate_log_level($config{log_level});
 

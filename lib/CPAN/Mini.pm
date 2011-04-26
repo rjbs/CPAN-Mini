@@ -18,7 +18,7 @@ L<minicpan> command, instead.)
   CPAN::Mini->update_mirror(
     remote => "http://cpan.mirrors.comintern.su",
     local  => "/usr/share/mirrors/cpan",
-    trace  => 1
+    log_level => 'debug',
   );
 
 =head1 DESCRIPTION
@@ -52,12 +52,12 @@ use Compress::Zlib 1.20 ();
 
 =method update_mirror
 
- CPAN::Mini->update_mirror(
-   remote => "http://cpan.mirrors.comintern.su",
-   local  => "/usr/share/mirrors/cpan",
-   force  => 0,
-   trace  => 1
- );
+  CPAN::Mini->update_mirror(
+    remote => "http://cpan.mirrors.comintern.su",
+    local  => "/usr/share/mirrors/cpan",
+    force  => 0,
+    log_level => 'debug',
+  );
 
 This is the only method that need be called from outside this module.  It will
 update the local mirror with the files from the remote mirror.   
@@ -97,9 +97,9 @@ on this run.
 If true, CPAN::Mini will skip the major language distributions: perl, parrot,
 and ponie.  It will also skip embperl, sybperl, bioperl, and kurila.
 
-* C<trace>
+* C<log_level>
 
-If true, CPAN::Mini will print status messages to STDOUT as it works.
+This defines the minimum level of message to log: debug, info, warn, or fatal
 
 * C<errors>
 
@@ -271,7 +271,7 @@ sub new {
     File::Path::mkpath(
       $self->{local},
       {
-        verbose => $self->{trace},
+        verbose => $self->{log_level} eq 'debug',
         mode    => $self->{dirmode},
       },
     );
@@ -378,7 +378,11 @@ sub _make_index_dirs {
 sub _install_indices {
   my $self = shift;
 
-  $self->_make_index_dirs($self->{local}, $self->{dirmode}, $self->{trace});
+  $self->_make_index_dirs(
+    $self->{local},
+    $self->{dirmode},
+    $self->{log_level} eq 'debug',
+  );
 
   for my $file ($self->_fixed_mirrors) {
     my $local_file = File::Spec->catfile($self->{local}, split m{/}, $file);
@@ -431,7 +435,7 @@ sub mirror_file {
     File::Path::mkpath(
       File::Basename::dirname($local_file),
       {
-        verbose => $self->{trace},
+        verbose => $self->{log_level} eq 'debug',
         mode    => $self->{dirmode},
       },
     );

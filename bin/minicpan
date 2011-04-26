@@ -14,21 +14,22 @@ __END__
  minicpan [options]
 
  Options
-   -l LOCAL   - where is the local minicpan?     (required)
-   -r REMOTE  - where is the remote cpan mirror? (required)
-   -d 0###    - permissions (numeric) to use when creating directories
-   -f         - check all directories, even if indices are unchanged
-   -p         - mirror perl, ponie, and parrot distributions
-   --debug    - run in debug mode (print even banal messages)
-   -q         - run in quiet mode (don't print status)
-   -qq        - run in silent mode (don't even print warnings)
-   -c CLASS   - what class to use to mirror (default: CPAN::Mini)
-   -C FILE    - what config file to use (default: ~/.minicpanrc)
-   -h         - print help and exit
-   -v         - print version and exit
-   -x         - build an exact mirror, getting even normally disallowed files
-   -t SEC     - timeout in sec. Defaults to 180 sec
-   --offline  - operate in offline mode (generally: do nothing)
+   -l LOCAL    - where is the local minicpan?     (required)
+   -r REMOTE   - where is the remote cpan mirror? (required)
+   -d 0###     - permissions (numeric) to use when creating directories
+   -f          - check all directories, even if indices are unchanged
+   -p          - mirror perl, ponie, and parrot distributions
+   --debug     - run in debug mode (print even banal messages)
+   -q          - run in quiet mode (don't print status)
+   -qq         - run in silent mode (don't even print warnings)
+   -c CLASS    - what class to use to mirror (default: CPAN::Mini)
+   -C FILE     - what config file to use (default: ~/.minicpanrc)
+   -h          - print help and exit
+   -v          - print version and exit
+   -x          - build an exact mirror, getting even normally disallowed files
+   -t SEC      - timeout in sec. Defaults to 180 sec
+   --offline   - operate in offline mode (generally: do nothing)
+   --log-level - provide a log level; instead of --debug, -q, or -qq
 
 =head1 DESCRIPTION
 

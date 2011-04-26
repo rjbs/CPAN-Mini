@@ -206,8 +206,10 @@ sub _get_mirror_list {
   my %mirror_list;
 
   # now walk the packages list
-  my $details = File::Spec->catfile($self->{scratch},
-    qw(modules 02packages.details.txt.gz));
+  my $details = File::Spec->catfile(
+    $self->_scratch_dir,
+    qw(modules 02packages.details.txt.gz)
+  );
 
   my $gz = Compress::Zlib::gzopen($details, "rb")
     or die "Cannot open details: $Compress::Zlib::gzerrno";
@@ -255,7 +257,6 @@ sub new {
   $self->{dirmode} = $defaults{dirmode} unless defined $self->{dirmode};
 
   $self->{recent} = {};
-  $self->{scratch} ||= File::Temp::tempdir(CLEANUP => 1);
 
   Carp::croak "no local mirror supplied" unless $self->{local};
 
@@ -325,14 +326,24 @@ sub _fixed_mirrors {
   );
 }
 
+sub _scratch_dir {
+  my ($self) = @_;
+
+  $self->{scratch} ||= File::Temp::tempdir(CLEANUP => 1);
+  return $self->{scratch};
+}
+
 sub mirror_indices {
   my $self = shift;
 
-  $self->_make_index_dirs($self->{scratch});
+  $self->_make_index_dirs($self->_scratch_dir);
 
   for my $path ($self->_fixed_mirrors) {
     my $local_file   = File::Spec->catfile($self->{local},   split m{/}, $path);
-    my $scratch_file = File::Spec->catfile($self->{scratch}, split m{/}, $path);
+    my $scratch_file = File::Spec->catfile(
+      $self->_scratch_dir,
+      split(m{/}, $path),
+    );
 
     File::Copy::copy($local_file, $scratch_file);
 
@@ -352,7 +363,7 @@ sub _mirror_extras {
 
 sub _make_index_dirs {
   my ($self, $base_dir, $dir_mode, $trace) = @_;
-  $base_dir ||= $self->{scratch};
+  $base_dir ||= $self->_scratch_dir;
   $dir_mode = 0711 if !defined $dir_mode;  ## no critic Zero
   $trace    = 0    if !defined $trace;
 
@@ -374,8 +385,10 @@ sub _install_indices {
 
     unlink $local_file;
 
-    File::Copy::copy(File::Spec->catfile($self->{scratch}, split m{/}, $file),
-      $local_file,);
+    File::Copy::copy(
+      File::Spec->catfile($self->_scratch_dir, split m{/}, $file),
+      $local_file,
+    );
 
     $self->{mirrored}{$local_file} = 1;
   }
@@ -402,7 +415,7 @@ sub mirror_file {
 
   # native absolute file
   my $local_file = File::Spec->catfile(
-    $arg->{to_scratch} ? $self->{scratch} : $self->{local},
+    $arg->{to_scratch} ? $self->_scratch_dir : $self->{local},
     split m{/}, $path
   );
 

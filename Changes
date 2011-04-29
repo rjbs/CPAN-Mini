@@ -2,6 +2,9 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+1.111005  2011-04-29 11:14:10 America/New_York
+          no code changes, this release is just intended to be indexed
+
 1.111004  2011-04-26 08:57:00 America/New_York
           overhaul logging: there is now a log_level
 

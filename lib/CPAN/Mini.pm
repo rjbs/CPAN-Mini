@@ -249,7 +249,8 @@ sub new {
     changes_made => 0,
     dirmode      => 0711,  ## no critic Zero
     errors       => 1,
-    mirrored     => {}
+    mirrored     => {},
+    log_level    => 'info',
   );
 
   my $self = bless { %defaults, @_ } => $class;
@@ -302,8 +303,6 @@ sub new {
     Carp::croak "unable to contact the remote mirror"
       unless eval { $self->__lwp->head($test_uri)->is_success };
   }
-
-  $self->{log_level} ||= 'info';
 
   return $self;
 }

@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          set the default log_level much earlier, to avoid an undef warning
 
 1.111005  2011-04-29 11:14:10 America/New_York
           no code changes, this release is just intended to be indexed

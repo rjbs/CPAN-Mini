@@ -2,6 +2,9 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+1.111007  2011-05-12 08:21:55 America/New_York
+          run the test minicpan in offline mode to avoid tester errors
+
 1.111006  2011-04-30 14:21:22 America/New_York
           set the default log_level much earlier, to avoid an undef warning
 

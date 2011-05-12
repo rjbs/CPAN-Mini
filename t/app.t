@@ -7,7 +7,7 @@ use File::Spec;
 use File::Temp qw(tempdir);
 
 my $TARGET  = tempdir(CLEANUP => 1);
-my @LR_ARGS = (qw(-r http://example.com/cpan -l), $TARGET);
+my @LR_ARGS = (qw(--offline -r http://example.tld/cpan -l), $TARGET);
 
 sub config_dir {
   my ($config) = @_;

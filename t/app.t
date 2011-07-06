@@ -103,6 +103,23 @@ for my $switch (qw(-qq --qq)) {
   };
 }
 
+
+subtest "-perl switch" => sub {
+
+    local $ENV{HOME} = config_dir;
+    local @ARGV = @LR_ARGS;
+
+    my $minicpan = CPAN::Mini::App->initialize_minicpan;
+    isa_ok($minicpan, 'CPAN::Mini');
+    is($minicpan->{skip_perl}, 1, "'skip_perl' is true without -perl switch");
+
+
+    local @ARGV = ('-perl', @LR_ARGS);
+    $minicpan = CPAN::Mini::App->initialize_minicpan;
+    isa_ok($minicpan, 'CPAN::Mini');
+    is($minicpan->{skip_perl}, q{}, "'skip_perl' is false with -perl switch");
+};
+
 done_testing;
 
 1;

@@ -9,6 +9,8 @@ use File::Temp qw(tempdir);
 my $TARGET  = tempdir(CLEANUP => 1);
 my @LR_ARGS = (qw(--offline -r http://example.tld/cpan -l), $TARGET);
 
+delete $ENV{CPAN_MINI_CONFIG};
+
 sub config_dir {
   my ($config) = @_;
 

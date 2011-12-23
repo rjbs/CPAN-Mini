@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          don't fail tests when the outside env has set CPAN_MINI_CONFIG
+          (thanks, Stephen Thirwall!)
 
 1.111007  2011-05-12 08:21:55 America/New_York
           run the test minicpan in offline mode to avoid tester errors

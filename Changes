@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.111008  2011-12-23 13:36:41 America/New_York
           don't fail tests when the outside env has set CPAN_MINI_CONFIG
           (thanks, Stephen Thirwall!)
 

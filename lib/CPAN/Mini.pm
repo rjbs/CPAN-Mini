@@ -709,18 +709,36 @@ sub read_config {
     or die "couldn't open config file $config_file: $!";
 
   my %config;
+  my %is_multivalue = map {; $_ => 1 }
+                      qw(also_mirror module_filters path_filters);
+
+  $config{$_} = [] for keys %is_multivalue;
+
   while (<$config_fh>) {
     chomp;
     next if /\A\s*\Z/sm;
-    if (/\A(\w+):\s*(\S.*?)\s*\Z/sm) { $config{$1} = $2; }
+
+    if (/\A(\w+):\s*(\S.*?)\s*\Z/sm) {
+      my ($key, $value) = ($1, $2);
+
+      if ($is_multivalue{ $key }) {
+        push @{ $config{$key} }, split /\s+/, $value;
+      } else {
+        $config{ $key } = $value;
+      }
+    }
   }
 
   for (qw(also_mirror)) {
-    $config{$_} = [ grep { length } split /\s+/, $config{$_} ] if $config{$_};
+    $config{$_} = [ grep { length } @{ $config{$_} } ];
   }
 
   for (qw(module_filters path_filters)) {
-    $config{$_} = [ map { qr/$_/ } split /\s+/, $config{$_} ] if $config{$_};
+    $config{$_} = [ map { qr/$_/ } @{ $config{$_} } ];
+  }
+
+  for (keys %is_multivalue) {
+    delete $config{$_} unless @{ $config{$_} };
   }
 
   return %config;

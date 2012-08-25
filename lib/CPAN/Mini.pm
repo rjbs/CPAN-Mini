@@ -493,6 +493,7 @@ sub __do_filter {
     for (@$filter) {
       return 1 if $self->__do_filter($_, $file);
     }
+    return;
   }
 
   if (ref($filter) eq 'CODE') {

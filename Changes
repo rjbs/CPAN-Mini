@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.111009  2012-08-27 21:32:39 America/New_York
           config options that once had to be specified as multiple entries
           on one line may now be given as repeated entries; these are
           also_mirror, module_filters, and path_filters

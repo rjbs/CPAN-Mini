@@ -2,6 +2,9 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+1.111010  2012-10-24 10:46:35 America/New_York
+          fix the old ->trace method, broken in 1.111004
+
 1.111009  2012-08-27 21:32:39 America/New_York
           config options that once had to be specified as multiple entries
           on one line may now be given as repeated entries; these are

@@ -649,7 +649,10 @@ sub log {
   $_[0]->log_unconditionally($_[1], $_[2]);
 }
 
-sub trace { my $self = shift; $self->log_info(@_); }
+sub trace {
+  my $self = shift;
+  $self->log(@_);
+}
 
 sub log_debug {
   my ($self, @rest) = @_;

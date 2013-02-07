@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          check that the received 02packages seems at least remotely plausible
 
 1.111010  2012-10-24 10:46:35 America/New_York
           fix the old ->trace method, broken in 1.111004

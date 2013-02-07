@@ -215,11 +215,23 @@ sub _get_mirror_list {
     or die "Cannot open details: $Compress::Zlib::gzerrno";
 
   my $inheader = 1;
+  my $file_ok  = 0;
   while ($gz->gzreadline($_) > 0) {
     if ($inheader) {
-      $inheader = 0 unless /\S/;
+      if (/\S/) {
+        my ($header, $value) = split /:\s*/, $_, 2;
+        chomp $value;
+        $file_ok = 1 if $header eq 'File'
+                    and $value eq '02packages.details.txt';
+      } else {
+        $inheader = 0;
+      }
+
       next;
     }
+
+    die "02packages.details.txt file is not a valid index\n"
+      unless $file_ok;
 
     my ($module, $version, $path) = split;
     next if $self->_filter_module({

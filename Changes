@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.111011  2013-02-07 16:40:23 America/New_York
           check that the received 02packages seems at least remotely plausible
 
 1.111010  2012-10-24 10:46:35 America/New_York

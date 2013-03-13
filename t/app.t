@@ -11,12 +11,17 @@ my @LR_ARGS = (qw(--offline -r http://example.tld/cpan -l), $TARGET);
 
 delete $ENV{CPAN_MINI_CONFIG};
 
+{
+    no warnings 'redefine';
+    *File::HomeDir::my_home = sub { $ENV{HOME} };
+}
+
 sub config_dir {
   my ($config) = @_;
 
   my $tempdir = tempdir(CLEANUP => 1);
 
-  return unless defined $config;
+  return $tempdir unless defined $config;
 
   my $filename = File::Spec->catfile($tempdir, '.minicpanrc');
   open my $config_fh, '>', $filename or die "can't write to $filename: $!";

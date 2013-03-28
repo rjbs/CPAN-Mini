@@ -1,6 +1,7 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          when testing, mock my_home harder (thanks, David Golden!)
 
 1.111011  2013-02-07 16:40:23 America/New_York
           check that the received 02packages seems at least remotely plausible

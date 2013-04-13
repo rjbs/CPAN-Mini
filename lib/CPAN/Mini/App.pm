@@ -56,46 +56,28 @@ sub initialize_minicpan {
 
   my %commandline;
 
-  my ($quiet, $debug, $log_level);
+  my @option_spec = $class->_option_spec();
+  GetOptions(\%commandline, @option_spec) or pod2usage(2);
 
-  GetOptions(
-    'c|class=s'   => \$commandline{class},
+  # These two options will cause the program to exit before finishing ->run
+  pod2usage(1) if $commandline{help};
+  $version = 1 if $commandline{version};
 
-    # These two options will cause the program to exit before finishing ->run
-    'h|help'      => sub { pod2usage(1); },
-    'v|version'   => sub { $version = 1 },
-
-    # How noisy should we be?
-    'quiet|q+'    => \$quiet,
-    'qq'          => sub { $quiet = 2 },
-    'debug'       => \$debug,
-    'log-level=s' => \$log_level,
-
-    'l|local=s'   => \$commandline{local},
-    'r|remote=s'  => \$commandline{remote},
-
-    'd|dirmode=s' => \$commandline{dirmode},
-    'offline'     => \$commandline{offline},
-    'f'           => \$commandline{force},
-    'p'           => \$commandline{perl},
-    'x'           => \$commandline{exact_mirror},
-    't|timeout=i' => \$commandline{timeout},
-
-    # Where to look for config not provided on the command line:
-    'C|config=s'  => \$commandline{config_file},
-  ) or pod2usage(2);
+  # How noisy should we be?
+  my $debug     = $commandline{debug};
+  my $log_level = $commandline{log_level};
+  my $quiet     = $commandline{qq} ? 2 : $commandline{quiet};
 
   die "can't mix --debug, --log-level, and --debug\n"
     if defined($quiet) + defined($debug) + defined($log_level) > 1;
 
+  # Set log_level accordingly
   $quiet ||= 0;
   $log_level = $debug      ? 'debug'
              : $quiet == 1 ? 'warn'
              : $quiet >= 2 ? 'fatal'
              : $log_level  ? $log_level
              :               undef;
-
-  $class->_validate_log_level($log_level) if defined $log_level;
 
   my %config = CPAN::Mini->read_config({
     log_level => 'info',
@@ -104,12 +86,10 @@ sub initialize_minicpan {
 
   $config{class} ||= 'CPAN::Mini';
 
-  foreach my $key (keys %commandline) {
-    $config{$key} = $commandline{$key} if defined $commandline{$key};
-  }
+  # Override config with commandline options
+  %config = (%config, %commandline);
 
   $config{log_level} = $log_level || $config{log_level} || 'info';
-
   $class->_validate_log_level($config{log_level});
 
   eval "require $config{class}";
@@ -119,28 +99,38 @@ sub initialize_minicpan {
   pod2usage(2) unless $config{local} and $config{remote};
 
   $|++;
-  $config{dirmode} &&= oct($config{dirmode});
 
-  return $config{class}->new(
-    remote         => $config{remote},
-    local          => $config{local},
-    force          => $config{force},
-    offline        => $config{offline},
-    also_mirror    => $config{also_mirror},
-    exact_mirror   => $config{exact_mirror},
-    module_filters => $config{module_filters},
-    path_filters   => $config{path_filters},
-    skip_cleanup   => $config{skip_cleanup},
-    skip_perl      => (not $config{perl}),
-    timeout        => $config{timeout},
-    ignore_source_control => $config{ignore_source_control},
-    (defined $config{dirmode} ? (dirmode => $config{dirmode}) : ()),
+  # Convert dirmode string to a real octal value, if given
+  $config{dirmode} = oct $config{dirmode} if $config{dirmode};
 
-    log_level      => $config{log_level},
-  );
+  # Turn the 'perl' option into 'skip_perl', for backward compatibility
+  $config{skip_perl} = not delete $config{perl};
+
+  return $config{class}->new(%config);
 }
 
-=head1 SEE ALSO 
+sub _option_spec {
+  return qw<
+    class|c=s
+    help|h
+    version|v
+    quiet|q+
+    qq
+    debug
+    log_level|log-level=s
+    local|l=s
+    remote|r=s
+    dirmode|d=s
+    offline
+    force|f
+    perl
+    exact_mirror|x
+    timeout|t=i
+    config_file|config|C=s
+  >;
+}
+
+=head1 SEE ALSO
 
 Randal Schwartz's original article, which can be found here:
 

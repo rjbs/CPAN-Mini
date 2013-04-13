@@ -72,6 +72,16 @@ The following options are recognized:
 
 =begin :list
 
+* C<local>
+
+This is the local file path where the mirror will be written or updated.
+
+* C<remote>
+
+This is the URL of the CPAN mirror from which to work.  A reasonable default
+will be picked by default.  A list of CPAN mirrors can be found at
+L<http://www.cpan.org/SITES.html>
+
 * C<dirmode>
 
 Generally an octal number, this option sets the permissions of created

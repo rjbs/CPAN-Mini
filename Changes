@@ -1,6 +1,13 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+          make www.cpan.org the default remote!
+
+          link to the list of mirrors, too (thanks, SYSMON!)
+
+          pass all options from command line, not just known ones (thanks,
+          Jeffrey Thalhammer, who waited a very very long time for me to apply
+          this!)
 
 1.111012  2013-03-28 16:32:58 America/New_York
           when testing, mock my_home harder (thanks, David Golden!)

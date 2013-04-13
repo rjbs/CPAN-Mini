@@ -775,13 +775,13 @@ sub read_config {
 
 =method config_file
 
-  my %config = CPAN::Mini->config_file( { options } );
+  my $config_file = CPAN::Mini->config_file( { options } );
 
 This routine returns the config file name. It first looks at for the
 C<config_file> setting, then the C<CPAN_MINI_CONFIG> environment
 variable, then the default F<~/.minicpanrc>, and finally the
 F<CPAN/Mini/minicpan.conf>. It uses the first defined value it finds.
-If the filename it selects does not exist, it returns the empty list.
+If the filename it selects does not exist, it returns false.
 
 OPTIONS is an optional hash reference of the C<CPAN::Mini> config hash. 
 

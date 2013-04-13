@@ -9,6 +9,8 @@ Revision history for CPAN-Mini
           Jeffrey Thalhammer, who waited a very very long time for me to apply
           this!)
 
+          die if local target isn't writable (suggested by SARGIE)
+
 1.111012  2013-03-28 16:32:58 America/New_York
           when testing, mock my_home harder (thanks, David Golden!)
 

@@ -166,9 +166,13 @@ sub update_mirror {
   $self = $self->new(@_) unless ref $self;
 
   unless ($self->{offline}) {
-    $self->log("Updating $self->{local}");
+    my $local = $self->{local};
+
+    $self->log("Updating $local");
     $self->log("Mirroring from $self->{remote}");
     $self->log("=" x 63);
+
+    die "local mirror target $local is not writable" unless -w $local;
 
     # mirrored tracks the already done, keyed by filename
     # 1 = local-checked, 2 = remote-mirrored

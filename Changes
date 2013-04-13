@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.111013  2013-04-13 14:02:58 Europe/London
           make www.cpan.org the default remote!
 
           link to the list of mirrors, too (thanks, SYSMON!)

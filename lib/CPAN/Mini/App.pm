@@ -84,7 +84,6 @@ sub initialize_minicpan {
     %commandline
   });
 
-  $config{remote} ||= 'http://www.cpan.org/';
   $config{class} ||= 'CPAN::Mini';
 
   # Override config with commandline options
@@ -97,6 +96,17 @@ sub initialize_minicpan {
   die $@ if $@;
 
   _display_version($config{class}) if $version;
+
+  if ($config{remote_from} && ! $config{remote}) {
+    $config{remote} = $config{class}->remote_from(
+      $config{remote_from},
+      $config{remote},
+      $config{quiet},
+    );
+  }
+
+  $config{remote} ||= 'http://www.cpan.org/';
+
   pod2usage(2) unless $config{local} and $config{remote};
 
   $|++;
@@ -128,6 +138,7 @@ sub _option_spec {
     exact_mirror|x
     timeout|t=i
     config_file|config|C=s
+    remote-from=s
   >;
 }
 

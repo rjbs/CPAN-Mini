@@ -60,7 +60,7 @@ use Compress::Zlib 1.20 ();
   );
 
 This is the only method that need be called from outside this module.  It will
-update the local mirror with the files from the remote mirror.   
+update the local mirror with the files from the remote mirror.
 
 If called as a class method, C<update_mirror> creates an ephemeral CPAN::Mini
 object on which other methods are called.  That object is used to store mirror
@@ -574,7 +574,7 @@ sub file_allowed {
 
 This method looks through the local mirror's files.  If it finds a file that
 neither belongs in the mirror nor is allowed (see the C<file_allowed> method),
-C<clean_file> is called on the file. 
+C<clean_file> is called on the file.
 
 If you set C<ignore_source_control> to a true value, then this doesn't clean
 up files that belong to source control systems. Currently this ignores:
@@ -783,7 +783,7 @@ variable, then the default F<~/.minicpanrc>, and finally the
 F<CPAN/Mini/minicpan.conf>. It uses the first defined value it finds.
 If the filename it selects does not exist, it returns false.
 
-OPTIONS is an optional hash reference of the C<CPAN::Mini> config hash. 
+OPTIONS is an optional hash reference of the C<CPAN::Mini> config hash.
 
 =cut
 
@@ -809,6 +809,91 @@ sub config_file {
     ? $config_file
     : ()
   );
+}
+
+=head2 remote_from
+
+  my $remote = CPAN::Mini->remote_from( $remote_from, $orig_remote, $quiet );
+
+This routine take an string argument and turn it into a method
+call to handle to retrieve the a cpan mirror url from a source.
+Currently supported methods:
+
+    cpan     - fetch the first mirror from your CPAN.pm config
+    cpanplus - fetch the first mirror from your CPANPLUS.pm config
+
+=cut
+
+sub remote_from {
+  my ( $class, $remote_from, $orig_remote, $quiet ) = @_;
+
+  my $method = lc "remote_from_" . $remote_from;
+
+  Carp::croak "unknown remote_from value: $remote_from"
+    unless $class->can($method);
+
+  my $new_remote = $class->$method;
+
+  warn "overriding '$orig_remote' with '$new_remote' via $method\n"
+    if !$quiet && $orig_remote;
+
+  return $new_remote;
+}
+
+=head2 remote_from_cpan
+
+  my $remote = CPAN::Mini->remote_from_cpan;
+
+This routine loads your CPAN.pm config and returns the first mirror in mirror
+list.  You can set this as your default by setting remote_from:cpan in your
+F<.minicpanrc> file.
+
+=cut
+
+sub remote_from_cpan {
+  my ($self) = @_;
+
+  Carp::croak "unable find a CPAN, maybe you need to install it"
+    unless eval { require CPAN; 1 };
+
+  CPAN::HandleConfig::require_myconfig_or_config();
+
+  Carp::croak "unable to find mirror list in your CPAN config"
+    unless exists $CPAN::Config->{urllist};
+
+  Carp::croak "unable to find first mirror url in your CPAN config"
+    unless ref( $CPAN::Config->{urllist} ) eq 'ARRAY' && $CPAN::Config->{urllist}[0];
+
+  return $CPAN::Config->{urllist}[0];
+}
+
+=head2 remote_from_cpanplus
+
+  my $remote = CPAN::Mini->remote_from_cpanplus;
+
+This routine loads your CPANPLUS.pm config and returns the first mirror in
+mirror list.  You can set this as your default by setting remote_from:cpanplus
+in your F<.minicpanrc> file.
+
+=cut
+
+sub remote_from_cpanplus {
+  my ($self) = @_;
+
+  Carp::croak "unable find a CPANPLUS, maybe you need to install it"
+    unless eval { require CPANPLUS::Backend };
+
+  my $cb = CPANPLUS::Backend->new;
+  my $hosts = $cb->configure_object->get_conf('hosts');
+
+  Carp::croak "unable to find mirror list in your CPANPLUS config"
+    unless $hosts;
+
+  Carp::croak "unable to find first mirror in your CPANPLUS config"
+    unless ref($hosts) eq 'ARRAY' && $hosts->[0];
+
+  my $url_parts = $hosts->[0];
+  return $url_parts->{scheme} . "://" . $url_parts->{host} . ( $url_parts->{path} || '' );
 }
 
 =head1 SEE ALSO

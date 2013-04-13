@@ -84,6 +84,7 @@ sub initialize_minicpan {
     %commandline
   });
 
+  $config{remote} ||= 'http://www.cpan.org/';
   $config{class} ||= 'CPAN::Mini';
 
   # Override config with commandline options

@@ -732,6 +732,9 @@ sub read_config {
   $class->log("Using config from $config_file")
     if ($options->{log_level}||'info') =~ /\A(?:warn|fatal)\z/;
 
+  substr($config_file, 0, 1, $class->__homedir)
+    if substr($config_file, 0, 1) eq q{~};
+
   return unless -e $config_file;
 
   open my $config_fh, '<', $config_file

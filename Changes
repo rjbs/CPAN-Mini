@@ -12,6 +12,8 @@ Revision history for CPAN-Mini
           add --remote-from option to get remote from CPAN or CPANPLUS config
           (thanks, Jeff Bisbee, who also waited a long time)
 
+          expand leading "~" in config file name (suggested by justincase)
+
           die if local target isn't writable (suggested by SARGIE)
 
 1.111012  2013-03-28 16:32:58 America/New_York

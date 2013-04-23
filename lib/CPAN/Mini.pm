@@ -646,7 +646,7 @@ sub clean_file {
 
   $minicpan->log($message);
 
-This will log (print) the given message unless the log level is too loo.
+This will log (print) the given message unless the log level is too low.
 
 C<log>, which logs at the I<info> level, may also be called as C<trace> for
 backward compatibility reasons.

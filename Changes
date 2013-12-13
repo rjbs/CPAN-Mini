@@ -2,6 +2,9 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+1.111015  2013-12-13 08:17:02 America/New_York
+          update repo and bugtracker
+
 1.111014  2013-11-15 19:17:39 America/New_York
           prune overly-aggressively-set prereqs; we do not require CPANPLUS!
 

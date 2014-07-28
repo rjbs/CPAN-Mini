@@ -235,8 +235,11 @@ sub _get_mirror_list {
       if (/\S/) {
         my ($header, $value) = split /:\s*/, $_, 2;
         chomp $value;
-        $file_ok = 1 if $header eq 'File'
-                    and $value eq '02packages.details.txt';
+        if ($header eq 'File'
+            and ($value eq '02packages.details.txt'
+                 or $value eq '02packages.details.txt.gz')) {
+          $file_ok = 1;
+        }
       } else {
         $inheader = 0;
       }

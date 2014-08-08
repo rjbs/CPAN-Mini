@@ -2,6 +2,10 @@ Revision history for CPAN-Mini
 
 {{$NEXT}}
 
+1.111016  2014-08-08 18:52:05-04:00 America/New_York
+        - cope with a difference in the 02packages headers made by Pinto
+          (thanks, Fabrice Gabolde)
+
 1.111015  2013-12-13 08:17:02 America/New_York
           update repo and bugtracker
 

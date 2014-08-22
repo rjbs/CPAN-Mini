@@ -515,21 +515,26 @@ filtered (to be skipped).  Returns 0 if the distribution is to not filtered
 =cut
 
 sub __do_filter {
-  my ($self, $filter, $file) = @_;
+  my ($self, $what, $filter, $file) = @_;
   return unless $filter;
 
   if (ref($filter) eq 'ARRAY') {
     for (@$filter) {
-      return 1 if $self->__do_filter($_, $file);
+      return 1 if $self->__do_filter($what, $_, $file);
     }
     return;
   }
 
+  my $match;
   if (ref($filter) eq 'CODE') {
-    return $filter->($file);
+    $match = $filter->($file);
   } else {
-    return $file =~ $filter;
+    $match = $file =~ $filter;
   }
+
+  $self->log_debug("skipping $file because $what matches $filter") if $match;
+  return 1 if $match;
+  return;
 }
 
 sub _filter_module {
@@ -544,8 +549,8 @@ sub _filter_module {
     return 1 if $args->{path} =~ m{/\bperl_mlb\.zip}i;
   }
 
-  return 1 if $self->__do_filter($self->{path_filters},   $args->{path});
-  return 1 if $self->__do_filter($self->{module_filters}, $args->{module});
+  return 1 if $self->__do_filter(path   => $self->{path_filters}, $args->{path});
+  return 1 if $self->__do_filter(module => $self->{module_filters}, $args->{module});
   return 0;
 }
 

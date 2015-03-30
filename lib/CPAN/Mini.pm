@@ -89,7 +89,7 @@ directories.  It defaults to 0711.
 
 * C<exact_mirror>
 
-If true, the C<files_allowed> method will allow all extra files to be mirrored.
+If true, the C<file_allowed> method will allow all extra files to be mirrored.
 
 * C<ignore_source_control>
 

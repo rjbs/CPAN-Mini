@@ -14,8 +14,8 @@ __END__
  minicpan [options]
 
  Options
-   -l LOCAL    - where is the local minicpan?     (required)
-   -r REMOTE   - where is the remote cpan mirror? (required)
+   -l LOCAL    - where is the local minicpan?
+   -r REMOTE   - where is the remote cpan mirror?
    -d 0###     - permissions (numeric) to use when creating directories
    -f          - check all directories, even if indices are unchanged
    -p          - mirror perl, ponie, and parrot distributions
@@ -23,7 +23,7 @@ __END__
    -q          - run in quiet mode (don't print status)
    -qq         - run in silent mode (don't even print warnings)
    -c CLASS    - what class to use to mirror (default: CPAN::Mini)
-   -C FILE     - what config file to use (default: ~/.minicpanrc)
+   -C FILE     - what config file to use
    -h          - print help and exit
    -v          - print version and exit
    -x          - build an exact mirror, getting even normally disallowed files
@@ -36,6 +36,13 @@ __END__
 
 This simple shell script just updates (or creates) a miniature CPAN mirror as
 described in CPAN::Mini.
+
+=head1 LOCAL MINICPAN LOCATION
+
+C<minicpan> will create the local minicpan in F<$XDG_CACHE_HOME/minicpan> by
+default, or F<$HOME/.cache/minicpan> if C<XDG_CACHE_HOME> is not set. This can
+be changed with the c<-l> command line option or by specifying a directory in
+the configuration file.
 
 =head1 CONFIGURATION FILE
 
@@ -55,6 +62,8 @@ It takes the first defined it finds:
 =item * Use the value specified by C<-C> on the command line
 
 =item * Use the value in the C<CPAN_MINI_CONFIG> environment variable
+
+=item * Use F<$XDG_CONFIG_HOME/minicpan/config>, or use F<$HOME/.config/minicpan/config> if C<XDG_CONFIG_HOME> is not set
 
 =item * Use F<~/.minicpanrc>
 

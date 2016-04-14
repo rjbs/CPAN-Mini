@@ -107,8 +107,6 @@ sub initialize_minicpan {
 
   $config{remote} ||= 'http://www.cpan.org/';
 
-  pod2usage(2) unless $config{local} and $config{remote};
-
   $|++;
 
   # Convert dirmode string to a real octal value, if given

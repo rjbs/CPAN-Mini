@@ -33,6 +33,18 @@ the newest version of every distribution.  Those files are:
 * 03modlist.data.gz
 * the last non-developer release of every dist for every author
 
+Once you have the files downloaded you can install modules straight from
+the folder.
+
+    cpanm -M /usr/share/mirrors/cpan CPAN::Mini
+
+Or make the files available via a web server to allow install of the
+modules from other machines.
+
+    cd /usr/share/mirrors/cpan
+    python -m SimpleHTTPServer 8000 &
+    cpanm -M http://localhost:8000 CPAN::Mini
+
 =cut
 
 use Carp ();

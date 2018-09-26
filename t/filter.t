@@ -10,6 +10,7 @@ use CPAN::Mini;
 my $self = {
 	changes_made => 1,
 	force => 1,
+    log_level => 'info',
 };
 
 bless $self, "CPAN::Mini";

@@ -3,9 +3,10 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 21;
 
 use File::Basename;
+use File::Temp;
 
 my $class = 'CPAN::Mini';
 
@@ -85,6 +86,35 @@ can_ok($class, 'config_file');
 
   is($class->config_file, $is_there_filename,
     'selects default config file name');
+}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# bad option in config file case
+{
+  my $cfg = File::Temp->new();
+  $cfg->print(<<'EOF');
+local: /home/my-mirror
+bad_option: TRUE
+EOF
+  $cfg->close();
+
+  local $ENV{CPAN_MINI_CONFIG} = $cfg->filename;
+
+  my @warnings;
+  local $SIG{__WARN__} = sub {
+     push @warnings, @_;
+  };
+
+  my %config = $class->read_config();
+
+  is scalar(@warnings), 1, 'exactly one warning';
+  like $warnings[0], qr{config option of \[bad_option\] was not recognised}, 'warning of invalid bad_option';
+
+  is_deeply(
+    \%config,
+    { local => '/home/my-mirror' },
+    'config file read with bad options ignored'
+  );
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

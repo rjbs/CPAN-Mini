@@ -39,9 +39,9 @@ use Carp ();
 
 use File::Basename ();
 use File::Copy     ();
-use File::HomeDir 0.57 ();  # Win32 support
+use File::HomeDir 0.57 ();    # Win32 support
 use File::Find ();
-use File::Path 2.04 ();     # new API, bugfixes
+use File::Path 2.04 ();       # new API, bugfixes
 use File::Spec ();
 use File::Temp ();
 
@@ -162,105 +162,109 @@ workaround for connection cache failures.
 =cut
 
 sub update_mirror {
-  my $self = shift;
-  $self = $self->new(@_) unless ref $self;
+    my $self = shift;
+    $self = $self->new(@_) unless ref $self;
 
-  unless ($self->{offline}) {
-    my $local = $self->{local};
+    unless ( $self->{offline} ) {
+        my $local = $self->{local};
 
-    $self->log("Updating $local");
-    $self->log("Mirroring from $self->{remote}");
-    $self->log("=" x 63);
+        $self->log("Updating $local");
+        $self->log("Mirroring from $self->{remote}");
+        $self->log( "=" x 63 );
 
-    die "local mirror target $local is not writable" unless -w $local;
+        die "local mirror target $local is not writable" unless -w $local;
 
-    # mirrored tracks the already done, keyed by filename
-    # 1 = local-checked, 2 = remote-mirrored
-    $self->mirror_indices;
+        # mirrored tracks the already done, keyed by filename
+        # 1 = local-checked, 2 = remote-mirrored
+        $self->mirror_indices;
 
-    return unless $self->{force} or $self->{changes_made};
+        return unless $self->{force} or $self->{changes_made};
 
-    # mirror all the files
-    $self->_mirror_extras;
-    $self->mirror_file($_, 1) for @{ $self->_get_mirror_list };
+        # mirror all the files
+        $self->_mirror_extras;
+        $self->mirror_file( $_, 1 ) for @{ $self->_get_mirror_list };
 
-    # install indices after files are mirrored in case we're interrupted
-    # so indices will seem new again when continuing
-    $self->_install_indices;
+        # install indices after files are mirrored in case we're interrupted
+        # so indices will seem new again when continuing
+        $self->_install_indices;
 
-    $self->_write_out_recent;
+        $self->_write_out_recent;
 
-    # eliminate files we don't need
-    $self->clean_unmirrored unless $self->{skip_cleanup};
-  }
+        # eliminate files we don't need
+        $self->clean_unmirrored unless $self->{skip_cleanup};
+    }
 
-  return $self->{changes_made};
+    return $self->{changes_made};
 }
 
 sub _recent { $_[0]->{recent}{ $_[1] } = 1 }
 
 sub _write_out_recent {
-  my ($self) = @_;
-  return unless my @keys = keys %{ $self->{recent} };
+    my ($self) = @_;
+    return unless my @keys = keys %{ $self->{recent} };
 
-  my $recent = File::Spec->catfile($self->{local}, 'RECENT');
-  open my $recent_fh, '>', $recent or die "can't open $recent for writing: $!";
+    my $recent = File::Spec->catfile( $self->{local}, 'RECENT' );
+    open my $recent_fh, '>', $recent
+        or die "can't open $recent for writing: $!";
 
-  for my $file (sort keys %{ $self->{recent} }) {
-    print {$recent_fh} "$file\n" or die "can't write to $recent: $!";
-  }
+    for my $file ( sort keys %{ $self->{recent} } ) {
+        print {$recent_fh} "$file\n" or die "can't write to $recent: $!";
+    }
 
-  die "error closing $recent: $!" unless close $recent_fh;
-  return;
+    die "error closing $recent: $!" unless close $recent_fh;
+    return;
 }
 
 sub _get_mirror_list {
-  my $self = shift;
+    my $self = shift;
 
-  my %mirror_list;
+    my %mirror_list;
 
-  # now walk the packages list
-  my $details = File::Spec->catfile(
-    $self->_scratch_dir,
-    qw(modules 02packages.details.txt.gz)
-  );
+    # now walk the packages list
+    my $details = File::Spec->catfile( $self->_scratch_dir,
+        qw(modules 02packages.details.txt.gz) );
 
-  my $gz = Compress::Zlib::gzopen($details, "rb")
-    or die "Cannot open details: $Compress::Zlib::gzerrno";
+    my $gz = Compress::Zlib::gzopen( $details, "rb" )
+        or die "Cannot open details: $Compress::Zlib::gzerrno";
 
-  my $inheader = 1;
-  my $file_ok  = 0;
-  while ($gz->gzreadline($_) > 0) {
-    if ($inheader) {
-      if (/\S/) {
-        my ($header, $value) = split /:\s*/, $_, 2;
-        chomp $value;
-        if ($header eq 'File'
-            and ($value eq '02packages.details.txt'
-                 or $value eq '02packages.details.txt.gz')) {
-          $file_ok = 1;
+    my $inheader = 1;
+    my $file_ok  = 0;
+    while ( $gz->gzreadline($_) > 0 ) {
+        if ($inheader) {
+            if (/\S/) {
+                my ( $header, $value ) = split /:\s*/, $_, 2;
+                chomp $value;
+                if ($header eq 'File'
+                    and (  $value eq '02packages.details.txt'
+                        or $value eq '02packages.details.txt.gz' )
+                    )
+                {
+                    $file_ok = 1;
+                }
+            }
+            else {
+                $inheader = 0;
+            }
+
+            next;
         }
-      } else {
-        $inheader = 0;
-      }
 
-      next;
+        die "02packages.details.txt file is not a valid index\n"
+            unless $file_ok;
+
+        my ( $module, $version, $path ) = split;
+        next
+            if $self->_filter_module(
+            {   module  => $module,
+                version => $version,
+                path    => $path,
+            }
+            );
+
+        $mirror_list{"authors/id/$path"}++;
     }
 
-    die "02packages.details.txt file is not a valid index\n"
-      unless $file_ok;
-
-    my ($module, $version, $path) = split;
-    next if $self->_filter_module({
-      module  => $module,
-      version => $version,
-      path    => $path,
-    });
-
-    $mirror_list{"authors/id/$path"}++;
-  }
-
-  return [ sort keys %mirror_list ];
+    return [ sort keys %mirror_list ];
 }
 
 =method new
@@ -273,67 +277,66 @@ above, under C<update_mirror>.
 =cut
 
 sub new {
-  my $class    = shift;
-  my %defaults = (
-    changes_made => 0,
-    dirmode      => 0711,  ## no critic Zero
-    errors       => 1,
-    mirrored     => {},
-    log_level    => 'info',
-  );
-
-  my $self = bless { %defaults, @_ } => $class;
-
-  $self->{dirmode} = $defaults{dirmode} unless defined $self->{dirmode};
-
-  $self->{recent} = {};
-
-  Carp::croak "no local mirror supplied" unless $self->{local};
-
-  substr($self->{local}, 0, 1, $class->__homedir)
-    if substr($self->{local}, 0, 1) eq q{~};
-
-  Carp::croak "local mirror path exists but is not a directory"
-    if (-e $self->{local})
-    and not(-d $self->{local});
-
-  unless (-e $self->{local}) {
-    File::Path::mkpath(
-      $self->{local},
-      {
-        verbose => $self->{log_level} eq 'debug',
-        mode    => $self->{dirmode},
-      },
+    my $class    = shift;
+    my %defaults = (
+        changes_made => 0,
+        dirmode      => 0711,     ## no critic Zero
+        errors       => 1,
+        mirrored     => {},
+        log_level    => 'info',
     );
-  }
 
-  Carp::croak "no write permission to local mirror" unless -w $self->{local};
+    my $self = bless { %defaults, @_ } => $class;
 
-  Carp::croak "no remote mirror supplied" unless $self->{remote};
+    $self->{dirmode} = $defaults{dirmode} unless defined $self->{dirmode};
 
-  $self->{remote} = "$self->{remote}/" if substr($self->{remote}, -1) ne '/';
+    $self->{recent} = {};
 
-  my $version = $class->VERSION;
-  $version = 'v?' unless defined $version;
+    Carp::croak "no local mirror supplied" unless $self->{local};
 
-  $self->{__lwp} = LWP::UserAgent->new(
-    agent     => "$class/$version",
-    env_proxy => 1,
-    ($self->{no_conn_cache} ? () : (keep_alive => 5)),
-    ($self->{timeout} ? (timeout => $self->{timeout}) : ()),
-  );
+    substr( $self->{local}, 0, 1, $class->__homedir )
+        if substr( $self->{local}, 0, 1 ) eq q{~};
 
-  unless ($self->{offline}) {
-    my $test_uri = URI->new_abs(
-      'modules/02packages.details.txt.gz',
-      $self->{remote},
-    )->as_string;
+    Carp::croak "local mirror path exists but is not a directory"
+        if ( -e $self->{local} )
+        and not( -d $self->{local} );
 
-    Carp::croak "unable to contact the remote mirror"
-      unless eval { $self->__lwp->head($test_uri)->is_success };
-  }
+    unless ( -e $self->{local} ) {
+        File::Path::mkpath(
+            $self->{local},
+            {   verbose => $self->{log_level} eq 'debug',
+                mode    => $self->{dirmode},
+            },
+        );
+    }
 
-  return $self;
+    Carp::croak "no write permission to local mirror"
+        unless -w $self->{local};
+
+    Carp::croak "no remote mirror supplied" unless $self->{remote};
+
+    $self->{remote} = "$self->{remote}/"
+        if substr( $self->{remote}, -1 ) ne '/';
+
+    my $version = $class->VERSION;
+    $version = 'v?' unless defined $version;
+
+    $self->{__lwp} = LWP::UserAgent->new(
+        agent     => "$class/$version",
+        env_proxy => 1,
+        ( $self->{no_conn_cache} ? () : ( keep_alive => 5 ) ),
+        ( $self->{timeout} ? ( timeout => $self->{timeout} ) : () ),
+    );
+
+    unless ( $self->{offline} ) {
+        my $test_uri = URI->new_abs( 'modules/02packages.details.txt.gz',
+            $self->{remote}, )->as_string;
+
+        Carp::croak "unable to contact the remote mirror"
+            unless eval { $self->__lwp->head($test_uri)->is_success };
+    }
+
+    return $self;
 }
 
 sub __lwp { $_[0]->{__lwp} }
@@ -347,83 +350,81 @@ This method updates the index files from the CPAN.
 =cut
 
 sub _fixed_mirrors {
-  qw(
-    authors/01mailrc.txt.gz
-    modules/02packages.details.txt.gz
-    modules/03modlist.data.gz
-  );
+    qw(
+        authors/01mailrc.txt.gz
+        modules/02packages.details.txt.gz
+        modules/03modlist.data.gz
+    );
 }
 
 sub _scratch_dir {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  $self->{scratch} ||= File::Temp::tempdir(CLEANUP => 1);
-  return $self->{scratch};
+    $self->{scratch} ||= File::Temp::tempdir( CLEANUP => 1 );
+    return $self->{scratch};
 }
 
 sub mirror_indices {
-  my $self = shift;
+    my $self = shift;
 
-  $self->_make_index_dirs($self->_scratch_dir);
+    $self->_make_index_dirs( $self->_scratch_dir );
 
-  for my $path ($self->_fixed_mirrors) {
-    my $local_file   = File::Spec->catfile($self->{local},   split m{/}, $path);
-    my $scratch_file = File::Spec->catfile(
-      $self->_scratch_dir,
-      split(m{/}, $path),
-    );
+    for my $path ( $self->_fixed_mirrors ) {
+        my $local_file
+            = File::Spec->catfile( $self->{local}, split m{/}, $path );
+        my $scratch_file = File::Spec->catfile( $self->_scratch_dir,
+            split( m{/}, $path ), );
 
-    File::Copy::copy($local_file, $scratch_file);
+        File::Copy::copy( $local_file, $scratch_file );
 
-    utime((stat $local_file)[ 8, 9 ], $scratch_file);
+        utime( ( stat $local_file )[ 8, 9 ], $scratch_file );
 
-    $self->mirror_file($path, undef, { to_scratch => 1 });
-  }
+        $self->mirror_file( $path, undef, { to_scratch => 1 } );
+    }
 }
 
 sub _mirror_extras {
-  my $self = shift;
+    my $self = shift;
 
-  for my $path (@{ $self->{also_mirror} }) {
-    $self->mirror_file($path, undef);
-  }
+    for my $path ( @{ $self->{also_mirror} } ) {
+        $self->mirror_file( $path, undef );
+    }
 }
 
 sub _make_index_dirs {
-  my ($self, $base_dir, $dir_mode, $trace) = @_;
-  $base_dir ||= $self->_scratch_dir;
-  $dir_mode = 0711 if !defined $dir_mode;  ## no critic Zero
-  $trace    = 0    if !defined $trace;
+    my ( $self, $base_dir, $dir_mode, $trace ) = @_;
+    $base_dir ||= $self->_scratch_dir;
+    $dir_mode = 0711 if !defined $dir_mode;    ## no critic Zero
+    $trace    = 0    if !defined $trace;
 
-  for my $index ($self->_fixed_mirrors) {
-    my $dir = File::Basename::dirname($index);
-    my $needed = File::Spec->catdir($base_dir, $dir);
-    File::Path::mkpath($needed, { verbose => $trace, mode => $dir_mode });
-    die "couldn't create $needed: $!" unless -d $needed;
-  }
+    for my $index ( $self->_fixed_mirrors ) {
+        my $dir = File::Basename::dirname($index);
+        my $needed = File::Spec->catdir( $base_dir, $dir );
+        File::Path::mkpath( $needed,
+            { verbose => $trace, mode => $dir_mode } );
+        die "couldn't create $needed: $!" unless -d $needed;
+    }
 }
 
 sub _install_indices {
-  my $self = shift;
+    my $self = shift;
 
-  $self->_make_index_dirs(
-    $self->{local},
-    $self->{dirmode},
-    $self->{log_level} eq 'debug',
-  );
-
-  for my $file ($self->_fixed_mirrors) {
-    my $local_file = File::Spec->catfile($self->{local}, split m{/}, $file);
-
-    unlink $local_file;
-
-    File::Copy::copy(
-      File::Spec->catfile($self->_scratch_dir, split m{/}, $file),
-      $local_file,
+    $self->_make_index_dirs( $self->{local}, $self->{dirmode},
+        $self->{log_level} eq 'debug',
     );
 
-    $self->{mirrored}{$local_file} = 1;
-  }
+    for my $file ( $self->_fixed_mirrors ) {
+        my $local_file
+            = File::Spec->catfile( $self->{local}, split m{/}, $file );
+
+        unlink $local_file;
+
+        File::Copy::copy(
+            File::Spec->catfile( $self->_scratch_dir, split m{/}, $file ),
+            $local_file, );
+
+        $self->{mirrored}{$local_file} = 1;
+    }
 }
 
 =method mirror_file
@@ -436,64 +437,70 @@ overwriting any existing file unless C<$skip_if_present> is true.
 =cut
 
 sub mirror_file {
-  my ($self, $path, $skip_if_present, $arg) = @_;
+    my ( $self, $path, $skip_if_present, $arg ) = @_;
 
-  $arg ||= {};
+    $arg ||= {};
 
-  # full URL
-  my $remote_uri = eval { $path->isa('URI') }
-                 ? $path
-                 : URI->new_abs($path, $self->{remote})->as_string;
+    # full URL
+    my $remote_uri
+        = eval { $path->isa('URI') }
+        ? $path
+        : URI->new_abs( $path, $self->{remote} )->as_string;
 
-  # native absolute file
-  my $local_file = File::Spec->catfile(
-    $arg->{to_scratch} ? $self->_scratch_dir : $self->{local},
-    split m{/}, $path
-  );
+    # native absolute file
+    my $local_file
+        = File::Spec->catfile(
+        $arg->{to_scratch} ? $self->_scratch_dir : $self->{local},
+        split m{/}, $path );
 
-  my $checksum_might_be_up_to_date = 1;
+    my $checksum_might_be_up_to_date = 1;
 
-  if ($skip_if_present and -f $local_file) {
-    ## upgrade to checked if not already
-    $self->{mirrored}{$local_file} ||= 1;
-  } elsif (($self->{mirrored}{$local_file} || 0) < 2) {
-    ## upgrade to full mirror
-    $self->{mirrored}{$local_file} = 2;
-
-    File::Path::mkpath(
-      File::Basename::dirname($local_file),
-      {
-        verbose => $self->{log_level} eq 'debug',
-        mode    => $self->{dirmode},
-      },
-    );
-
-    $self->log($path, { no_nl => 1 });
-    my $res = $self->{__lwp}->mirror($remote_uri, $local_file);
-
-    if ($res->is_success) {
-      utime undef, undef, $local_file if $arg->{update_times};
-      $checksum_might_be_up_to_date = 0;
-      $self->_recent($path);
-      $self->log(" ... updated");
-      $self->{changes_made}++;
-    } elsif ($res->code != 304) {  # not modified
-      $self->log(" ... resulted in an HTTP error with status " . $res->code);
-      $self->log_warn("$remote_uri: " . $res->status_line);
-      return;
-    } else {
-      $self->log(" ... up to date");
+    if ( $skip_if_present and -f $local_file ) {
+        ## upgrade to checked if not already
+        $self->{mirrored}{$local_file} ||= 1;
     }
-  }
+    elsif ( ( $self->{mirrored}{$local_file} || 0 ) < 2 ) {
+        ## upgrade to full mirror
+        $self->{mirrored}{$local_file} = 2;
 
-  if ($path =~ m{^authors/id}) {   # maybe fetch CHECKSUMS
-    my $checksum_path
-      = URI->new_abs("CHECKSUMS", $remote_uri)->rel($self->{remote})->as_string;
+        File::Path::mkpath(
+            File::Basename::dirname($local_file),
+            {   verbose => $self->{log_level} eq 'debug',
+                mode    => $self->{dirmode},
+            },
+        );
 
-    if ($path ne $checksum_path) {
-      $self->mirror_file($checksum_path, $checksum_might_be_up_to_date);
+        $self->log( $path, { no_nl => 1 } );
+        my $res = $self->{__lwp}->mirror( $remote_uri, $local_file );
+
+        if ( $res->is_success ) {
+            utime undef, undef, $local_file if $arg->{update_times};
+            $checksum_might_be_up_to_date = 0;
+            $self->_recent($path);
+            $self->log(" ... updated");
+            $self->{changes_made}++;
+        }
+        elsif ( $res->code != 304 ) {    # not modified
+            $self->log(
+                " ... resulted in an HTTP error with status " . $res->code );
+            $self->log_warn( "$remote_uri: " . $res->status_line );
+            return;
+        }
+        else {
+            $self->log(" ... up to date");
+        }
     }
-  }
+
+    if ( $path =~ m{^authors/id} ) {     # maybe fetch CHECKSUMS
+        my $checksum_path
+            = URI->new_abs( "CHECKSUMS", $remote_uri )
+            ->rel( $self->{remote} )->as_string;
+
+        if ( $path ne $checksum_path ) {
+            $self->mirror_file( $checksum_path,
+                $checksum_might_be_up_to_date );
+        }
+    }
 }
 
 =begin devel
@@ -515,43 +522,50 @@ filtered (to be skipped).  Returns 0 if the distribution is to not filtered
 =cut
 
 sub __do_filter {
-  my ($self, $what, $filter, $file) = @_;
-  return unless $filter;
+    my ( $self, $what, $filter, $file ) = @_;
+    return unless $filter;
 
-  if (ref($filter) eq 'ARRAY') {
-    for (@$filter) {
-      return 1 if $self->__do_filter($what, $_, $file);
+    if ( ref($filter) eq 'ARRAY' ) {
+        for (@$filter) {
+            return 1 if $self->__do_filter( $what, $_, $file );
+        }
+        return;
     }
+
+    my $match;
+    if ( ref($filter) eq 'CODE' ) {
+        $match = $filter->($file);
+    }
+    else {
+        $match = $file =~ $filter;
+    }
+
+    $self->log_debug("skipping $file because $what matches $filter")
+        if $match;
+    return 1 if $match;
     return;
-  }
-
-  my $match;
-  if (ref($filter) eq 'CODE') {
-    $match = $filter->($file);
-  } else {
-    $match = $file =~ $filter;
-  }
-
-  $self->log_debug("skipping $file because $what matches $filter") if $match;
-  return 1 if $match;
-  return;
 }
 
 sub _filter_module {
-  my $self = shift;
-  my $args = shift;
+    my $self = shift;
+    my $args = shift;
 
-  if ($self->{skip_perl}) {
-    return 1 if $args->{path} =~ m{/(?:emb|syb|bio)?perl-\d}i;
-    return 1 if $args->{path} =~ m{/(?:parrot|ponie)-\d}i;
-    return 1 if $args->{path} =~ m{/(?:kurila)-\d}i;
-    return 1 if $args->{path} =~ m{/\bperl-?5\.004}i;
-    return 1 if $args->{path} =~ m{/\bperl_mlb\.zip}i;
-  }
+    if ( $self->{skip_perl} ) {
+        return 1 if $args->{path} =~ m{/(?:emb|syb|bio)?perl-\d}i;
+        return 1 if $args->{path} =~ m{/(?:parrot|ponie)-\d}i;
+        return 1 if $args->{path} =~ m{/(?:kurila)-\d}i;
+        return 1 if $args->{path} =~ m{/\bperl-?5\.004}i;
+        return 1 if $args->{path} =~ m{/\bperl_mlb\.zip}i;
+    }
 
-  return 1 if $self->__do_filter(path   => $self->{path_filters}, $args->{path});
-  return 1 if $self->__do_filter(module => $self->{module_filters}, $args->{module});
-  return 0;
+    return 1
+        if $self->__do_filter( path => $self->{path_filters}, $args->{path} );
+    return 1
+        if $self->__do_filter(
+        module => $self->{module_filters},
+        $args->{module}
+        );
+    return 0;
 }
 
 =method file_allowed
@@ -567,13 +581,15 @@ all files are allowed.
 =cut
 
 sub file_allowed {
-  my ($self, $file) = @_;
-  return 1 if $self->{exact_mirror};
+    my ( $self, $file ) = @_;
+    return 1 if $self->{exact_mirror};
 
-  # It's a cheap hack, but it gets the job done.
-  return 1 if $file eq File::Spec->catfile($self->{local}, 'RECENT');
+    # It's a cheap hack, but it gets the job done.
+    return 1 if $file eq File::Spec->catfile( $self->{local}, 'RECENT' );
 
-  return (substr(File::Basename::basename($file), 0, 1) eq q{.}) ? 1 : 0;
+    return ( substr( File::Basename::basename($file), 0, 1 ) eq q{.} )
+        ? 1
+        : 0;
 }
 
 =method clean_unmirrored
@@ -596,32 +612,33 @@ Send patches for other source control files that you would like to have added.
 =cut
 
 my %Source_control_files;
+
 BEGIN {
-  %Source_control_files = map { $_ => 1 }
-    qw(.cvs .svn .git .cvsignore .svnignore .gitignore);
+    %Source_control_files
+        = map { $_ => 1 } qw(.cvs .svn .git .cvsignore .svnignore .gitignore);
 }
 
 sub clean_unmirrored {
-  my $self = shift;
+    my $self = shift;
 
-  File::Find::find sub {
-    my $file = File::Spec->canonpath($File::Find::name);  ## no critic Package
-    my $basename = File::Basename::basename( $file );
+    File::Find::find sub {
+        my $file
+            = File::Spec->canonpath($File::Find::name);   ## no critic Package
+        my $basename = File::Basename::basename($file);
 
-    if (
-      $self->{ignore_source_control}
-      and exists $Source_control_files{$basename}
-    ) {
-      $File::Find::prune = 1;
-      return;
-    }
+        if ( $self->{ignore_source_control}
+            and exists $Source_control_files{$basename} )
+        {
+            $File::Find::prune = 1;
+            return;
+        }
 
-    return unless (-f $file and not $self->{mirrored}{$file});
-    return if $self->file_allowed($file);
+        return unless ( -f $file and not $self->{mirrored}{$file} );
+        return if $self->file_allowed($file);
 
-    $self->clean_file($file);
+        $self->clean_file($file);
 
-  }, $self->{local};
+    }, $self->{local};
 }
 
 =method clean_file
@@ -634,16 +651,16 @@ true if the file is successfully unlinked.  Otherwise, it returns false.
 =cut
 
 sub clean_file {
-  my ($self, $file) = @_;
+    my ( $self, $file ) = @_;
 
-  unless (unlink $file) {
-    $self->log_warn("$file cannot be removed: $!");
-    return;
-  }
+    unless ( unlink $file ) {
+        $self->log_warn("$file cannot be removed: $!");
+        return;
+    }
 
-  $self->log("$file removed");
+    $self->log("$file removed");
 
-  return 1;
+    return 1;
 }
 
 =method log_warn
@@ -662,36 +679,36 @@ backward compatibility reasons.
 =cut
 
 sub log_level {
-  return $_[0]->{log_level} if ref $_[0];
-  return 'info';
+    return $_[0]->{log_level} if ref $_[0];
+    return 'info';
 }
 
 sub log_unconditionally {
-  my ($self, $message, $arg) = @_;
-  $arg ||= {};
+    my ( $self, $message, $arg ) = @_;
+    $arg ||= {};
 
-  print($message, $arg->{no_nl} ? () : "\n");
+    print( $message, $arg->{no_nl} ? () : "\n" );
 }
 
 sub log_warn {
-  return if $_[0]->log_level eq 'fatal';
-  $_[0]->log_unconditionally($_[1], $_[2]);
+    return if $_[0]->log_level eq 'fatal';
+    $_[0]->log_unconditionally( $_[1], $_[2] );
 }
 
 sub log {
-  return unless $_[0]->log_level =~ /\A(?:info|debug)\z/;
-  $_[0]->log_unconditionally($_[1], $_[2]);
+    return unless $_[0]->log_level =~ /\A(?:info|debug)\z/;
+    $_[0]->log_unconditionally( $_[1], $_[2] );
 }
 
 sub trace {
-  my $self = shift;
-  $self->log(@_);
+    my $self = shift;
+    $self->log(@_);
 }
 
 sub log_debug {
-  my ($self, @rest) = @_;
-  return unless $_[0]->log_level eq 'debug';
-  $_[0]->log_unconditionally($_[1], $_[2]);
+    my ( $self, @rest ) = @_;
+    return unless $_[0]->log_level && $_[0]->log_level eq 'debug';
+    $_[0]->log_unconditionally( $_[1], $_[2] );
 }
 
 =method read_config
@@ -706,82 +723,89 @@ L<File::HomeDir|File::HomeDir>.
 =cut
 
 sub __homedir {
-  my ($class) = @_;
+    my ($class) = @_;
 
-  my $homedir = File::HomeDir->my_home || $ENV{HOME};
+    my $homedir = File::HomeDir->my_home || $ENV{HOME};
 
-  Carp::croak "couldn't determine your home directory!  set HOME env variable"
-    unless defined $homedir;
+    Carp::croak
+        "couldn't determine your home directory!  set HOME env variable"
+        unless defined $homedir;
 
-  return $homedir;
+    return $homedir;
 }
 
 sub __homedir_configfile {
-  my ($class) = @_;
-  my $default = File::Spec->catfile($class->__homedir, '.minicpanrc');
+    my ($class) = @_;
+    my $default = File::Spec->catfile( $class->__homedir, '.minicpanrc' );
 }
 
 sub __default_configfile {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  (my $pm_loc = $INC{'CPAN/Mini.pm'}) =~ s/Mini\.pm\z//;
-  File::Spec->catfile($pm_loc, 'minicpan.conf');
+    ( my $pm_loc = $INC{'CPAN/Mini.pm'} ) =~ s/Mini\.pm\z//;
+    File::Spec->catfile( $pm_loc, 'minicpan.conf' );
 }
 
 sub read_config {
-  my ($class, $options) = @_;
+    my ( $class, $options ) = @_;
 
-  my $config_file = $class->config_file($options);
+    my $config_file = $class->config_file($options);
 
-  return unless defined $config_file;
+    return unless defined $config_file;
+    # This is ugly, but lets us respect -qq for now even before we have an
+    # object.  I think a better fix is warranted. -- rjbs, 2010-03-04
+    $class->log("Using config from $config_file")
+        if ( $options->{log_level} || 'info' ) =~ /\A(?:warn|fatal)\z/;
 
-  # This is ugly, but lets us respect -qq for now even before we have an
-  # object.  I think a better fix is warranted. -- rjbs, 2010-03-04
-  $class->log("Using config from $config_file")
-    if ($options->{log_level}||'info') =~ /\A(?:warn|fatal)\z/;
+    substr( $config_file, 0, 1, $class->__homedir )
+        if substr( $config_file, 0, 1 ) eq q{~};
 
-  substr($config_file, 0, 1, $class->__homedir)
-    if substr($config_file, 0, 1) eq q{~};
+    return unless -e $config_file;
 
-  return unless -e $config_file;
+    open my $config_fh, '<', $config_file
+        or die "couldn't open config file $config_file: $!";
 
-  open my $config_fh, '<', $config_file
-    or die "couldn't open config file $config_file: $!";
+    my %config;
+    my %is_multivalue
+        = map { ; $_ => 1 } qw(also_mirror module_filters path_filters);
+    my %is_singlevalue = map { ; $_ => 1 }
+        qw(local remote dirmode exact_mirror ignore_source_control force skip_perl
+        log_level errors skip_cleanup offline  no_conn_cache);
 
-  my %config;
-  my %is_multivalue = map {; $_ => 1 }
-                      qw(also_mirror module_filters path_filters);
+    $config{$_} = [] for keys %is_multivalue;
 
-  $config{$_} = [] for keys %is_multivalue;
+    while (<$config_fh>) {
+        chomp;
+        next if /\A\s*\Z/sm;
 
-  while (<$config_fh>) {
-    chomp;
-    next if /\A\s*\Z/sm;
+        if (/\A(\w+):\s*(\S.*?)\s*\Z/sm) {
+            my ( $key, $value ) = ( $1, $2 );
 
-    if (/\A(\w+):\s*(\S.*?)\s*\Z/sm) {
-      my ($key, $value) = ($1, $2);
-
-      if ($is_multivalue{ $key }) {
-        push @{ $config{$key} }, split /\s+/, $value;
-      } else {
-        $config{ $key } = $value;
-      }
+            if ( $is_multivalue{$key} ) {
+                push @{ $config{$key} }, split /\s+/, $value;
+            }
+            elsif ( $is_singlevalue{$key} ) {
+                $config{$key} = $value;
+            }
+            else {
+                warn "*ERROR*: config option of [$key] was not recognised";
+            }
+        }
     }
-  }
 
-  for (qw(also_mirror)) {
-    $config{$_} = [ grep { length } @{ $config{$_} } ];
-  }
+    for (qw(also_mirror)) {
+        $config{$_} = [ grep {length} @{ $config{$_} } ];
+    }
 
-  for (qw(module_filters path_filters)) {
-    $config{$_} = [ map { qr/$_/ } @{ $config{$_} } ];
-  }
+    for (qw(module_filters path_filters)) {
+        $config{$_} = [ map {qr/$_/} @{ $config{$_} } ];
+    }
 
-  for (keys %is_multivalue) {
-    delete $config{$_} unless @{ $config{$_} };
-  }
+    for ( keys %is_multivalue ) {
+        delete $config{$_} unless @{ $config{$_} };
+    }
 
-  return %config;
+    return %config;
 }
 
 =method config_file
@@ -799,27 +823,31 @@ OPTIONS is an optional hash reference of the C<CPAN::Mini> config hash.
 =cut
 
 sub config_file {
-  my ($class, $options) = @_;
+    my ( $class, $options ) = @_;
 
-  my $config_file = do {
-    if (defined eval { $options->{config_file} }) {
-      $options->{config_file};
-    } elsif (defined $ENV{CPAN_MINI_CONFIG}) {
-      $ENV{CPAN_MINI_CONFIG};
-    } elsif (defined $class->__homedir_configfile) {
-      $class->__homedir_configfile;
-    } elsif (defined $class->__default_configfile) {
-      $class->__default_configfile;
-    } else {
-      ();
-    }
-  };
+    my $config_file = do {
+        if ( defined eval { $options->{config_file} } ) {
+            $options->{config_file};
+        }
+        elsif ( defined $ENV{CPAN_MINI_CONFIG} ) {
+            $ENV{CPAN_MINI_CONFIG};
+        }
+        elsif ( defined $class->__homedir_configfile ) {
+            $class->__homedir_configfile;
+        }
+        elsif ( defined $class->__default_configfile ) {
+            $class->__default_configfile;
+        }
+        else {
+            ();
+        }
+    };
 
-  return (
-    (defined $config_file && -e $config_file)
-    ? $config_file
-    : ()
-  );
+    return (
+        ( defined $config_file && -e $config_file )
+        ? $config_file
+        : ()
+    );
 }
 
 =head2 remote_from
@@ -836,19 +864,19 @@ Currently supported methods:
 =cut
 
 sub remote_from {
-  my ( $class, $remote_from, $orig_remote, $quiet ) = @_;
+    my ( $class, $remote_from, $orig_remote, $quiet ) = @_;
 
-  my $method = lc "remote_from_" . $remote_from;
+    my $method = lc "remote_from_" . $remote_from;
 
-  Carp::croak "unknown remote_from value: $remote_from"
-    unless $class->can($method);
+    Carp::croak "unknown remote_from value: $remote_from"
+        unless $class->can($method);
 
-  my $new_remote = $class->$method;
+    my $new_remote = $class->$method;
 
-  warn "overriding '$orig_remote' with '$new_remote' via $method\n"
-    if !$quiet && $orig_remote;
+    warn "overriding '$orig_remote' with '$new_remote' via $method\n"
+        if !$quiet && $orig_remote;
 
-  return $new_remote;
+    return $new_remote;
 }
 
 =head2 remote_from_cpan
@@ -862,20 +890,21 @@ F<.minicpanrc> file.
 =cut
 
 sub remote_from_cpan {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  Carp::croak "unable find a CPAN, maybe you need to install it"
-    unless eval { require CPAN; 1 };
+    Carp::croak "unable find a CPAN, maybe you need to install it"
+        unless eval { require CPAN; 1 };
 
-  CPAN::HandleConfig::require_myconfig_or_config();
+    CPAN::HandleConfig::require_myconfig_or_config();
 
-  Carp::croak "unable to find mirror list in your CPAN config"
-    unless exists $CPAN::Config->{urllist};
+    Carp::croak "unable to find mirror list in your CPAN config"
+        unless exists $CPAN::Config->{urllist};
 
-  Carp::croak "unable to find first mirror url in your CPAN config"
-    unless ref( $CPAN::Config->{urllist} ) eq 'ARRAY' && $CPAN::Config->{urllist}[0];
+    Carp::croak "unable to find first mirror url in your CPAN config"
+        unless ref( $CPAN::Config->{urllist} ) eq 'ARRAY'
+        && $CPAN::Config->{urllist}[0];
 
-  return $CPAN::Config->{urllist}[0];
+    return $CPAN::Config->{urllist}[0];
 }
 
 =head2 remote_from_cpanplus
@@ -889,22 +918,25 @@ in your F<.minicpanrc> file.
 =cut
 
 sub remote_from_cpanplus {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  Carp::croak "unable find a CPANPLUS, maybe you need to install it"
-    unless eval { require CPANPLUS::Backend };
+    Carp::croak "unable find a CPANPLUS, maybe you need to install it"
+        unless eval { require CPANPLUS::Backend };
 
-  my $cb = CPANPLUS::Backend->new;
-  my $hosts = $cb->configure_object->get_conf('hosts');
+    my $cb    = CPANPLUS::Backend->new;
+    my $hosts = $cb->configure_object->get_conf('hosts');
 
-  Carp::croak "unable to find mirror list in your CPANPLUS config"
-    unless $hosts;
+    Carp::croak "unable to find mirror list in your CPANPLUS config"
+        unless $hosts;
 
-  Carp::croak "unable to find first mirror in your CPANPLUS config"
-    unless ref($hosts) eq 'ARRAY' && $hosts->[0];
+    Carp::croak "unable to find first mirror in your CPANPLUS config"
+        unless ref($hosts) eq 'ARRAY' && $hosts->[0];
 
-  my $url_parts = $hosts->[0];
-  return $url_parts->{scheme} . "://" . $url_parts->{host} . ( $url_parts->{path} || '' );
+    my $url_parts = $hosts->[0];
+    return
+          $url_parts->{scheme} . "://"
+        . $url_parts->{host}
+        . ( $url_parts->{path} || '' );
 }
 
 =head1 SEE ALSO

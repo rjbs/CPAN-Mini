@@ -469,9 +469,14 @@ sub mirror_file {
     );
 
     $self->log($path, { no_nl => 1 });
-    my $res = $self->{__lwp}->mirror($remote_uri, $local_file);
+    my $res = eval { $self->{__lwp}->mirror($remote_uri, $local_file) };
 
-    if ($res->is_success) {
+    if (! $res) {
+      my $error = $@ || "(unknown error)";
+      $self->log(" ... resulted in an HTTP client error");
+      $self->log_warn("$remote_uri: $error");
+      return;
+    } elsif ($res->is_success) {
       utime undef, undef, $local_file if $arg->{update_times};
       $checksum_might_be_up_to_date = 0;
       $self->_recent($path);

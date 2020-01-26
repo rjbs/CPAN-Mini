@@ -695,7 +695,7 @@ sub trace {
 
 sub log_debug {
   my ($self, @rest) = @_;
-  return unless $_[0]->log_level eq 'debug';
+  return unless ($_[0]->log_level || '') eq 'debug';
   $_[0]->log_unconditionally($_[1], $_[2]);
 }
 

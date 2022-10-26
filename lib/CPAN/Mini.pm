@@ -293,6 +293,8 @@ sub new {
   substr($self->{local}, 0, 1, $class->__homedir)
     if substr($self->{local}, 0, 1) eq q{~};
 
+  $self->{local} = File::Spec->rel2abs($self->{local});
+
   Carp::croak "local mirror path exists but is not a directory"
     if (-e $self->{local})
     and not(-d $self->{local});

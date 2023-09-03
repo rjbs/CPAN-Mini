@@ -9,6 +9,8 @@ use CPAN::Mini;
 
 use Test::More;
 
+plan skip_all => "mirror If-Modified-Since broken on new host";
+
 my $tempdir = tempdir(CLEANUP => 1);
 
 CPAN::Mini->update_mirror(

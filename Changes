@@ -1,6 +1,8 @@
 Revision history for CPAN-Mini
 
 {{$NEXT}}
+
+1.111017  2023-09-02 20:43:07-04:00 America/New_York
         - packaging updates, including notes on Perl version expected
         - improved error handling
         - absolutize local mirror location before mirroring

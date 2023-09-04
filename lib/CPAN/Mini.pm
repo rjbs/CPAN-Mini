@@ -44,6 +44,7 @@ use File::Find ();
 use File::Path 2.04 ();     # new API, bugfixes
 use File::Spec ();
 use File::Temp ();
+use File::BaseDir ();
 
 use URI 1            ();
 use LWP::UserAgent 5 ();
@@ -74,7 +75,9 @@ The following options are recognized:
 
 * C<local>
 
-This is the local file path where the mirror will be written or updated.
+This is the local file path where the mirror will be written or updated. It
+defaults to F<$XDG_CACHE_HOME/minicpan>, or F<$HOME/.cache/minicpan> if
+C<XDG_CACHE_HOME> is not set.
 
 * C<remote>
 
@@ -288,7 +291,8 @@ sub new {
 
   $self->{recent} = {};
 
-  Carp::croak "no local mirror supplied" unless $self->{local};
+  my $xdg = File::BaseDir->new();
+  $self->{local} ||= File::Spec->catfile($xdg->xdg_cache_home(), 'minicpan');
 
   substr($self->{local}, 0, 1, $class->__homedir)
     if substr($self->{local}, 0, 1) eq q{~};
@@ -707,8 +711,8 @@ sub log_debug {
 
 This routine returns a set of arguments that can be passed to CPAN::Mini's
 C<new> or C<update_mirror> methods.  It will look for a file called
-F<.minicpanrc> in the user's home directory as determined by
-L<File::HomeDir|File::HomeDir>.
+F<$XDG_CONFIG_HOME/minicpan/config> or F<.minicpanrc> in the user's home
+directory as determined by L<File::HomeDir|File::HomeDir>.
 
 =cut
 
@@ -725,6 +729,12 @@ sub __homedir {
 
 sub __homedir_configfile {
   my ($class) = @_;
+
+  my $xdg = File::BaseDir->new();
+  my $xdg_config = File::Spec->catfile($xdg->xdg_config_home(), 'minicpan', 'config');
+  if (-e $xdg_config) {
+    return $xdg_config;
+  }
   my $default = File::Spec->catfile($class->__homedir, '.minicpanrc');
 }
 
@@ -797,9 +807,10 @@ sub read_config {
 
 This routine returns the config file name. It first looks at for the
 C<config_file> setting, then the C<CPAN_MINI_CONFIG> environment
-variable, then the default F<~/.minicpanrc>, and finally the
-F<CPAN/Mini/minicpan.conf>. It uses the first defined value it finds.
-If the filename it selects does not exist, it returns false.
+variable, then F<$XDG_CONFIG_HOME/minicpan/config> or
+F<$HOME/.config/minicpan/config>, then the default F<~/.minicpanrc>, and
+finally the F<CPAN/Mini/minicpan.conf>. It uses the first defined value
+it finds. If the filename it selects does not exist, it returns false.
 
 OPTIONS is an optional hash reference of the C<CPAN::Mini> config hash.
 

@@ -15,7 +15,7 @@ __END__
 
  Options
    -l LOCAL    - where is the local minicpan?     (required)
-   -r REMOTE   - where is the remote cpan mirror? (required)
+   -r REMOTE   - where is the remote cpan mirror?
    -d 0###     - permissions (numeric) to use when creating directories
    -f          - check all directories, even if indices are unchanged
    -p          - mirror perl, ponie, and parrot distributions
@@ -44,7 +44,6 @@ information.  The file is a simple set of names and values, as in the following
 example:
 
  local:  /home/rjbs/mirrors/minicpan/
- remote: http://your.favorite.cpan/cpan/
  exact_mirror: 1
  
 C<minicpan> tries to find a configuration file through the following process.
